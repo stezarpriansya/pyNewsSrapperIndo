@@ -11,15 +11,17 @@ import html
 import json
 import time
 from requests.exceptions import ConnectionError
+import mysql.connector
 
 class Otorider:
-    def getIndeksLink(self, links, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+    def getIndeksLink(self, links, page, cat, host='127.0.0.1', date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
         Untuk mengambil seluruh url otorider
         link pada indeks category tertentu
         category = 1(tips & modifikasi), 12(berita), 14(komunitas)
         date = Y/m/d
         """
+        con = mysql.connector.connect(user='root', password='', host=host, database='news_db')
         print("page ", page)
         url = "http://otorider.com/post/jscategoryfeed?page="+str(page)+"&c="+str(cat)+"&per-page=10"
         print(url)
@@ -35,9 +37,16 @@ class Otorider:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('div', class_="col-lg-12")
+        # flag = True
         for post in indeks:
             link = [post.find('a', href=True)['href'], cat]
-            if (link[0] in [x[0] for x in links]):
+            #check if there are a post with same url
+            cursor = con.cursor()
+            query = ("SELECT count(*) FROM article WHERE url = %s")
+            cursor.execute(query, (link[0]))
+            result = cursor.fetchone()
+            cursor.close()
+            if (link[0] in [x[0] for x in links]) or (result[0] > 0):
                 max_page = page
                 break
             else:
@@ -47,7 +56,7 @@ class Otorider:
         if page != max_page:
             time.sleep(10)
             links = self.getIndeksLink(links, page+1, cat, date)
-
+        con.close()
         return links
 
     def getDetailBerita(self, links):
