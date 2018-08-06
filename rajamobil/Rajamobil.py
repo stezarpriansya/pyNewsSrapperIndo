@@ -55,8 +55,8 @@ class Rajamobil:
         if flag:
             el_page = soup.find('div', class_="page-nav td-pb-padding-side")
             if el_page:
-                # max_page = int(el_page.find('a', class_="last").text.strip(' '))
-                max_page = 3
+                max_page = int(el_page.find('a', class_="last").text.strip(' '))
+                # max_page = 3
                 if page < max_page:
                     time.sleep(10)
                     links = self.getIndeksLink(links, page+1, cat, date)

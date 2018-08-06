@@ -55,8 +55,8 @@ class Carreview:
         if flag:
             el_page = soup.find('ul', class_="pagination")
             if el_page:
-                # last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
-                last_page = 3
+                last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
+                # last_page = 3
                 if last_page != page:
                     time.sleep(10)
                     links = self.getIndeksLink(links, page+1, cat, date)

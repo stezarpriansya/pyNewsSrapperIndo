@@ -55,8 +55,8 @@ class Cintamobil:
         if flag:
             el_page = soup.find('ul', class_="paging pull-right")
             if el_page:
-                # max_page = int(el_page.findAll('li')[-1].find('a', href=True)['href'].split('/')[-1].replace('p', '').strip(' '))
-                max_page = 3
+                max_page = int(el_page.findAll('li')[-1].find('a', href=True)['href'].split('/')[-1].replace('p', '').strip(' '))
+                # max_page = 3
                 if page < max_page:
                     time.sleep(10)
                     links = self.getIndeksLink(links, page+1, cat, date)

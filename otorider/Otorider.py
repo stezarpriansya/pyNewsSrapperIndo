@@ -51,8 +51,8 @@ class Otorider:
                 break
             else:
                 links.append(link)
-                # max_page = -1
-                max_page = 3
+                max_page = -1
+                # max_page = 3
 
         if page != max_page:
             time.sleep(10)
