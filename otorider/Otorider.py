@@ -14,14 +14,14 @@ from requests.exceptions import ConnectionError
 import mysql.connector
 
 class Otorider:
-    def getIndeksLink(self, links, page, cat, host='127.0.0.1', date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+    def getIndeksLink(self, links, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
         Untuk mengambil seluruh url otorider
         link pada indeks category tertentu
         category = 1(tips & modifikasi), 12(berita), 14(komunitas)
         date = Y/m/d
         """
-        con = mysql.connector.connect(user='root', password='', host=host, database='news_db')
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
         url = "http://otorider.com/post/jscategoryfeed?page="+str(page)+"&c="+str(cat)+"&per-page=10"
         print(url)
@@ -42,8 +42,8 @@ class Otorider:
             link = [post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
             cursor = con.cursor()
-            query = ("SELECT count(*) FROM article WHERE url = %s")
-            cursor.execute(query, (link[0]))
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
             if (link[0] in [x[0] for x in links]) or (result[0] > 0):
@@ -51,7 +51,8 @@ class Otorider:
                 break
             else:
                 links.append(link)
-                max_page = -1
+                # max_page = -1
+                max_page = 3
 
         if page != max_page:
             time.sleep(10)

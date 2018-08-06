@@ -14,14 +14,14 @@ from requests.exceptions import ConnectionError
 import mysql.connector
 
 class Carreview:
-    def getIndeksLink(self, links, page, cat, host='127.0.0.1', date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+    def getIndeksLink(self, links, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
         Untuk mengambil seluruh url carreview
         link pada indeks category tertentu
-        category = tips, berita
+        category = how-to, news, carpedia, versus
         date = Y/m/d
         """
-        con = mysql.connector.connect(user='root', password='', host=host, database='news_db')
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
         url = "http://carreview.id/"+cat+"?page="+str(page)
         print(url)
@@ -42,8 +42,8 @@ class Carreview:
             link = [post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
             cursor = con.cursor()
-            query = ("SELECT count(*) FROM article WHERE url = %s")
-            cursor.execute(query, (link[0]))
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
             if(result[0] > 0):
@@ -55,12 +55,12 @@ class Carreview:
         if flag:
             el_page = soup.find('ul', class_="pagination")
             if el_page:
-                last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
-
+                # last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
+                last_page = 3
                 if last_page != page:
                     time.sleep(10)
                     links = self.getIndeksLink(links, page+1, cat, date)
-                    
+
         con.close()
         return links
 
@@ -88,7 +88,7 @@ class Carreview:
             article = soup.find('div', class_="left-content")
 
             #extract date
-            pubdate = article.find('li', {'class':'publish-date'}).text.split('')
+            pubdate = article.find('li', {'class':'publish-date'}).text.split(',')
             pubdate = pubdate[1].strip(' \t\n\r')
             articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d-%b-%Y %H:%M"), '%Y-%m-%d %H:%M:%S')
             articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
