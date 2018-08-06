@@ -122,7 +122,7 @@ class Otorider:
             #hapus linksisip
             for ls in detail.findAll('a'):
                 if ls.find('strong'):
-                    if text[:4] == 'Baca':
+                    if 'baca' in ls.find('strong').text.lower():
                         ls.decompose()
 
             #extract content
