@@ -15,9 +15,10 @@ from requests.exceptions import ConnectionError
 class Carreview:
     def getIndeksLink(self, links, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
-        Untuk mengambil seluruh url okezone
+        Untuk mengambil seluruh url carreview
         link pada indeks category tertentu
         category = tips, berita
+        date = Y/m/d
         """
         print("page ", page)
         url = "http://carreview.id/"+cat+"?page="+str(page)

@@ -15,9 +15,10 @@ from requests.exceptions import ConnectionError
 class Otodriver:
     def getIndeksLink(self, links, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
-        Untuk mengambil seluruh url okezone
+        Untuk mengambil seluruh url otodriver
         link pada indeks category tertentu
         category = tips, berita
+        date = Y/m/d
         """
         print("page ", page)
         url = "http://otodriver.com/"+cat+"?page="+str(page)+"&per-page=18"

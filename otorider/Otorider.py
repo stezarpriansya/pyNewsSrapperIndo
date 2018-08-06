@@ -15,9 +15,10 @@ from requests.exceptions import ConnectionError
 class Otorider:
     def getIndeksLink(self, links, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
-        Untuk mengambil seluruh url okezone
+        Untuk mengambil seluruh url otorider
         link pada indeks category tertentu
         category = 1(tips & modifikasi), 12(berita), 14(komunitas)
+        date = Y/m/d
         """
         print("page ", page)
         url = "http://otorider.com/post/jscategoryfeed?page="+str(page)+"&c="+str(cat)+"&per-page=10"

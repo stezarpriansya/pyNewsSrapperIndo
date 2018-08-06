@@ -15,9 +15,10 @@ from requests.exceptions import ConnectionError
 class Rajamobil:
     def getIndeksLink(self, links, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
-        Untuk mengambil seluruh url okezone
+        Untuk mengambil seluruh url rajamobil
         link pada indeks category tertentu
         category = berita
+        date = Y/m/d
         """
         print("page ", page)
         url = "https://"+cat+".rajamobil.com/page/"+str(page)
@@ -36,6 +37,7 @@ class Rajamobil:
         indeks = soup.findAll('div', class_="td-block-span4")
         for post in indeks:
             link = [post.find('a', href=True)['href'], cat]
+
             links.append(link)
 
         el_page = soup.find('div', class_="page-nav td-pb-padding-side")

@@ -15,9 +15,10 @@ from requests.exceptions import ConnectionError
 class Cintamobil:
     def getIndeksLink(self, links, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
-        Untuk mengambil seluruh url okezone
+        Untuk mengambil seluruh url cintamobil
         link pada indeks category tertentu
         category = berita-mobil, tips-trik
+        date = Y/m/d
         """
         print("page ", page)
         url = "https://cintamobil.com/"+cat+"/"+cat+"/p"+str(page)
