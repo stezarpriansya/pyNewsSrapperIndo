@@ -70,9 +70,9 @@ class Liputan6:
             articles['id']
 
             #extract subcategory from breadcrumb
-            bc = soup.find('ul', class_="breadcrumb__wrap")
-            if not bc:
-                continue
+            #bc = soup.find('ul', class_="breadcrumb__wrap")
+            #if not bc:
+            #    continue
 
             bc = soup.find('ul', class_="read-page--breadcrumb")
             if not bc:
