@@ -96,7 +96,7 @@ class Tribun:
             #extract date
             pubdate = scripts['datePublished']
             pubdate = pubdate[0:19].strip(' \t\n\r')
-            articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+            articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
             articles['id'] = int(soup.find('meta', {"property":"android:app_id"})['content'])
 
             #extract author
