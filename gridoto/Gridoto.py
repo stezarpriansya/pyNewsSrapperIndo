@@ -13,17 +13,18 @@ import time
 from requests.exceptions import ConnectionError
 import mysql.connector
 
-class Otorider:
-    def getIndeksLink(self, links, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+class Gridoto:
+    def getIndeksLink(self, links, page, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
-        Untuk mengambil seluruh url otorider
+        Untuk mengambil seluruh url carreview
         link pada indeks category tertentu
-        category = 1(tips & modifikasi), 12(berita), 14(komunitas)
+        category = all
         date = Y/m/d
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
-        url = "http://otorider.com/post/jscategoryfeed?page="+str(page)+"&c="+str(cat)+"&per-page=10"
+        date = datetime.strptime(date, '%Y/%m/%d')
+        url = "https://www.gridoto.com/index?day="+str(date.date().day)+"&month="+str(date.date().month)+"&year="+str(date.date().year)+"&section=all&page="+str(page)
         print(url)
         # Make the request and create the response object: response
         try:
@@ -31,32 +32,38 @@ class Otorider:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            links = self.getIndeksLink(links, page+1, cat, date)
+            links = self.getIndeksLink(links, page+1, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        indeks = soup.findAll('div', class_="col-lg-12")
-        # flag = True
+        indeks = soup.findAll('div', class_="news-list__item l-index clearfix")
+        flag = True
         for post in indeks:
-            link = [post.find('a', href=True)['href'], cat]
+            subcategory = post.find('a', class_="cateskew").text.strip(' \t\n\r')
+            link = [post.find('a', class_="news-list__link", href=True)['href'], subcategory]
             #check if there are a post with same url
             cursor = con.cursor()
             query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
             cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
-            if (link[0] in [x[0] for x in links]) or (result[0] > 0):
-                max_page = page
+            if(result[0] > 0):
+                flag = False
                 break
             else:
                 links.append(link)
-                max_page = -1
-                # max_page = 3
 
-        if page != max_page:
-            time.sleep(10)
-            links = self.getIndeksLink(links, page+1, cat, date)
+        if flag:
+            el_page = soup.find('ul', class_="pagination_number")
+            if el_page:
+                last_page = int(el_page.findAll('li')[-1].text.replace('\n', '').strip(' '))
+                active_page = int(el_page.find('li', class_="active").text.replace('\n', '').strip(' '))
+                # last_page = 3
+                if last_page != active_page:
+                    time.sleep(10)
+                    links = self.getIndeksLink(links, page+1, date)
+
         con.close()
         return links
 
@@ -69,54 +76,48 @@ class Otorider:
             time.sleep(10)
             articles = {}
             #link
-            url = link[0]
+            url = link[0]+'?page=all'
             response = requests.get(url)
             html = response.text
             # Create a BeautifulSoup object from the HTML: soup
             soup = BeautifulSoup(html, "html5lib")
 
+            scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[-1].text)
             #category
-            if link[1] == 1:
-                cat = 'Tips Modifikasi'
-            elif cat == 12:
-                cat = 'Berita'
-            else:
-                cat = 'Komunitas'
-
             articles['category'] = 'Otomotif'
-            articles['subcategory'] = cat
+            articles['subcategory'] = link[1]
 
             articles['url'] = url
 
-            article = soup.find('div', class_="left-content")
+            article = soup.find('div', class_="read__article clearfix")
 
             #extract date
-            pubdate = article.find('meta', {'itemprop':'datePublished'})['content']
+            pubdate = soup.find('meta', {'name':'content_date'})['content']
             pubdate = pubdate.strip(' \t\n\r')
             articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-            articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
+            articles['id'] = int(soup.find('meta', {'name':'content_id'})['content'])
 
             #extract author
-            articles['author'] = soup.find('meta', {'property': 'article:author'})['content']
+            articles['author'] = soup.find('meta', {'name':'content_author'})['content']
 
             #extract title
-            articles['title'] = soup.find('meta', {'property': 'og:title'})['content']
+            articles['title'] = scripts['headline']
 
             #source
-            articles['source'] = 'otorider'
+            articles['source'] = 'gridoto'
 
             #extract comments count
             articles['comments'] = 0
 
             #extract tags
-            tags = article.find('div', class_="post-meta").findAll('a')
-            articles['tags'] = ','.join([x.text.replace('#', '') for x in tags])
+            tags = soup.find('meta', {'name':'content_tag'})['content']
+            articles['tags'] = tags
 
             #extract images
-            articles['images'] = soup.find("meta", attrs={'property':'twitter:image'})['content']
+            articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
 
             #extract detail
-            detail = article.find('div', attrs={'class':'entry-content detail-content'})
+            detail = article.find('div', attrs={'class':'read__right'})
 
             #hapus video sisip
             for div in detail.findAll('div'):
@@ -131,7 +132,7 @@ class Otorider:
                 ns.decompose()
 
             #hapus linksisip
-            for ls in detail.findAll('a'):
+            for ls in detail.findAll('p'):
                 if ls.find('strong'):
                     if 'baca' in ls.find('strong').text.lower():
                         ls.decompose()

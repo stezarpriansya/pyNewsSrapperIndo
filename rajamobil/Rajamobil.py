@@ -11,14 +11,17 @@ import html
 import json
 import time
 from requests.exceptions import ConnectionError
+import mysql.connector
 
 class Rajamobil:
     def getIndeksLink(self, links, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
-        Untuk mengambil seluruh url okezone
+        Untuk mengambil seluruh url rajamobil
         link pada indeks category tertentu
         category = berita
+        date = Y/m/d
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
         url = "https://"+cat+".rajamobil.com/page/"+str(page)
         print(url)
@@ -34,18 +37,30 @@ class Rajamobil:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('div', class_="td-block-span4")
+        flag = True
         for post in indeks:
             link = [post.find('a', href=True)['href'], cat]
-            links.append(link)
+            #check if there are a post with same url
+            cursor = con.cursor()
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            cursor.close()
+            if(result[0] > 0):
+                flag = False
+                break
+            else:
+                links.append(link)
 
-        el_page = soup.find('div', class_="page-nav td-pb-padding-side")
-        if el_page:
-            max_page = int(el_page.find('a', class_="last").text.strip(' '))
-
-            if page < max_page:
-                time.sleep(10)
-                links = self.getIndeksLink(links, page+1, cat, date)
-
+        if flag:
+            el_page = soup.find('div', class_="page-nav td-pb-padding-side")
+            if el_page:
+                max_page = int(el_page.find('a', class_="last").text.strip(' '))
+                # max_page = 3
+                if page < max_page:
+                    time.sleep(10)
+                    links = self.getIndeksLink(links, page+1, cat, date)
+        con.close()
         return links
 
     def getDetailBerita(self, links):
