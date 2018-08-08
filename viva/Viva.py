@@ -38,17 +38,18 @@ class Viva:
                 if date_post == date:
                     link = [post.find('a', class_="title-content", href=True)['href'], ""]
                     print('masukan link ', link[0])
-                    links.append(link)
+                    detail = self.getDetailBerita(link)
+                    details.append(detail)
 
                 if date_max == date:
                     load_more = driver.find_element_by_id('load_terbaru_btn')
                     load_more.click()
                     time.sleep(10)
-                    links = self.getLoadMorePost(links, driver, date)
+                    details = self.getLoadMorePost(details, driver, date)
 
-        return links
+        return details
 
-    def getIndeksLink(self, links, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
+    def getAllBerita(self, details, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
         """
         Untuk mengambil seluruh url okezone
         link pada indeks category tertentu
@@ -69,89 +70,86 @@ class Viva:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
 
-        links = self.getLoadMorePost(links, driver, date)
+        details = self.getLoadMorePost(details, driver, date)
 
-        return links
+        return details
 
-    def getDetailBerita(self, links):
+    def getDetailBerita(self, link):
         """
         Mengambil seluruh element dari halaman berita
         """
-        all_articles = []
-        for link in links:
-            time.sleep(10)
-            articles = {}
-            #link
-            url = link[0]
-            response = requests.get(url)
-            html = response.text
-            # Create a BeautifulSoup object from the HTML: soup
-            soup = BeautifulSoup(html, "html5lib")
+        time.sleep(10)
+        articles = {}
+        #link
+        url = link[0]
+        response = requests.get(url)
+        html = response.text
+        # Create a BeautifulSoup object from the HTML: soup
+        soup = BeautifulSoup(html, "html5lib")
 
-            #extract scrip json ld
-            scripts = soup.findAll('script', attrs={'type':'application/ld+json'})[-1].text
-            scripts = json.loads(scripts)
+        #extract scrip json ld
+        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})[-1].text
+        scripts = json.loads(scripts)
 
-            #extract subcategory from breadcrumb
-            bc = soup.find('div', class_="leading-breadcrumb")
-            if not bc:
-                continue
+        #extract subcategory from breadcrumb
+        bc = soup.find('div', class_="leading-breadcrumb")
+        if not bc:
+            continue
 
-            cat = bc.findAll('a')[-2].text
-            sub = bc.findAll('a')[-1].text
-            if ("foto" in sub.lower()) or  "video" in sub.lower():
-                continue
+        cat = bc.findAll('a')[-2].text
+        sub = bc.findAll('a')[-1].text
+        if ("foto" in sub.lower()) or  "video" in sub.lower():
+            continue
 
-            #category
-            articles['category'] = cat
-            articles['subcategory'] = sub
+        #category
+        articles['category'] = cat
+        articles['subcategory'] = sub
 
-            articles['id'] = int(scripts['mainEntityOfPage']['@id'])
+        articles['id'] = int(scripts['mainEntityOfPage']['@id'])
 
-            articles['url'] = url
+        articles['url'] = url
 
-            article = soup.find('section', attrs={'id':'viva-content'})
+        article = soup.find('section', attrs={'id':'viva-content'})
 
-            #extract date
-            pubdate = scripts['datePublished']
-            pubdate = pubdate[0:19].strip(' \t\n\r')
-            articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+        #extract date
+        pubdate = scripts['datePublished']
+        pubdate = pubdate[0:19].strip(' \t\n\r')
+        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
 
-            #extract author
-            articles['author'] = scripts['author']['name']
+        #extract author
+        articles['author'] = scripts['author']['name']
 
-            #extract title
-            articles['title'] = article.find('div', class_="leading-title").find('h1').text
+        #extract title
+        articles['title'] = article.find('div', class_="leading-title").find('h1').text
 
-            #source
-            articles['source'] = 'viva'
+        #source
+        articles['source'] = 'viva'
 
-            #extract comments count
-            articles['comments'] = int(article.find('comment-count').text.strip(' \t\n\r'))
+        #extract comments count
+        articles['comments'] = int(article.find('comment-count').text.strip(' \t\n\r'))
 
-            #extract tags
-            tags = soup.find('meta', attrs={'name':'news_keywords'})['content']
-            articles['tags'] = tags
+        #extract tags
+        tags = soup.find('meta', attrs={'name':'news_keywords'})['content']
+        articles['tags'] = tags
 
-            #extract images
-            articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
+        #extract images
+        articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
 
-            #extract detail
-            detail = article.find('div', attrs={"class":"article-detail article-detail-v2"})
+        #extract detail
+        detail = article.find('div', attrs={"class":"article-detail article-detail-v2"})
 
-            #hapus video sisip
-            for div in detail.findAll('div'):
-                div.decompose()
+        #hapus video sisip
+        for div in detail.findAll('div'):
+            div.decompose()
 
-            #hapus all script
-            for script in detail.findAll('script'):
-                script.decompose()
+        #hapus all script
+        for script in detail.findAll('script'):
+            script.decompose()
 
-            #extract content
-            detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-            content = re.sub(r'\n|\t|\b|\r','',detail.text)
-            articles['content'] = content
-            print('memasukkan berita id ', articles['id'])
-            all_articles.append(articles)
+        #extract content
+        detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
+        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        articles['content'] = content
+        print('memasukkan berita id ', articles['id'])
 
         return all_articles

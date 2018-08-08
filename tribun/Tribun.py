@@ -14,7 +14,7 @@ from requests.exceptions import ConnectionError
 import mysql.connector
 
 class Tribun:
-    def getIndeksLink(self, links, page, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+    def getAllBerita(self, details, page, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
         Untuk mengambil seluruh url carreview
         link pada indeks category tertentu
@@ -31,7 +31,7 @@ class Tribun:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            links = self.getIndeksLink(links, page+1, date)
+            details = self.getAllBerita(details, page+1, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -50,7 +50,8 @@ class Tribun:
                 flag = False
                 break
             else:
-                links.append(link)
+                detail = self.getDetailBerita(link)
+                details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="paging")
@@ -63,86 +64,84 @@ class Tribun:
 
                 if page < max_page:
                     time.sleep(10)
-                    links = self.getIndeksLink(links, page+1, date)
+                    details = self.getAllBerita(details, page+1, date)
 
         con.close()
         return links
 
-    def getDetailBerita(self, links):
+    def getDetailBerita(self, link):
         """
         Mengambil seluruh element dari halaman berita
         """
-        all_articles = []
-        for link in links:
-            time.sleep(10)
-            articles = {}
-            #link
-            url = link[0]+'?page=all'
-            response = requests.get(url)
-            html = response.text
-            # Create a BeautifulSoup object from the HTML: soup
-            soup = BeautifulSoup(html, "html5lib")
+        time.sleep(10)
+        articles = {}
+        #link
+        url = link[0]+'?page=all'
+        response = requests.get(url)
+        html = response.text
+        # Create a BeautifulSoup object from the HTML: soup
+        soup = BeautifulSoup(html, "html5lib")
 
-            scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[0].text)
-            #category
-            categories = soup.findAll('meta', {'name':'cXenseParse:category'})
-            articles['category'] = categories[0]['content']
-            articles['subcategory'] = categories[1]['content']
+        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[0].text)
+        #category
+        categories = soup.findAll('meta', {'name':'cXenseParse:category'})
+        articles['category'] = categories[0]['content']
+        articles['subcategory'] = categories[1]['content']
 
-            articles['url'] = url
+        articles['url'] = url
 
-            article = soup.find('div', {'id':'article_con'})
+        article = soup.find('div', {'id':'article_con'})
 
-            #extract date
-            pubdate = scripts['datePublished']
-            pubdate = pubdate[0:19].strip(' \t\n\r')
-            articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-            articles['id'] = int(soup.find('meta', {"property":"android:app_id"})['content'])
+        #extract date
+        pubdate = scripts['datePublished']
+        pubdate = pubdate[0:19].strip(' \t\n\r')
+        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+        articles['id'] = int(soup.find('meta', {"property":"android:app_id"})['content'])
 
-            #extract author
-            articles['author'] = scripts['author']['name']
+        #extract author
+        articles['author'] = scripts['author']['name']
 
-            #extract title
-            articles['title'] = scripts['headline']
+        #extract title
+        articles['title'] = scripts['headline']
 
-            #source
-            articles['source'] = 'tribunnews'
+        #source
+        articles['source'] = 'tribunnews'
 
-            #extract comments count
-            articles['comments'] = 0
+        #extract comments count
+        articles['comments'] = 0
 
-            #extract tags
-            tags = article.find('div', class_="mb10 f16 ln24 mb10 mt5").findAll('a')
-            articles['tags'] = ','.join([x.text.replace('#', '') for x in tags])
+        #extract tags
+        tags = article.find('div', class_="mb10 f16 ln24 mb10 mt5").findAll('a')
+        articles['tags'] = ','.join([x.text.replace('#', '') for x in tags])
 
-            #extract images
-            articles['images'] = scripts['image']['url']
+        #extract images
+        articles['images'] = scripts['image']['url']
 
-            #extract detail
-            detail = article.find('div', attrs={'class':'side-article txt-article'})
+        #extract detail
+        detail = article.find('div', attrs={'class':'side-article txt-article'})
 
-            #hapus video sisip
-            for div in detail.findAll('div'):
-                div.decompose()
+        #hapus video sisip
+        for div in detail.findAll('div'):
+            div.decompose()
 
-            #hapus all script
-            for script in detail.findAll('script'):
-                script.decompose()
+        #hapus all script
+        for script in detail.findAll('script'):
+            script.decompose()
 
-            #hapus all noscript
-            for ns in detail.findAll('noscript'):
-                ns.decompose()
+        #hapus all noscript
+        for ns in detail.findAll('noscript'):
+            ns.decompose()
 
-            #hapus linksisip
-            for ls in detail.findAll('p', class_="baca"):
-                if ls.find('strong'):
-                    if 'baca' in ls.find('strong').text.lower():
-                        ls.decompose()
+        #hapus linksisip
+        for ls in detail.findAll('p', class_="baca"):
+            if ls.find('strong'):
+                if 'baca' in ls.find('strong').text.lower():
+                    ls.decompose()
 
-            #extract content
-            detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-            content = re.sub(r'\n|\t|\b|\r','',detail.text)
-            articles['content'] = content
-            print('memasukkan berita id ', articles['id'])
-            all_articles.append(articles)
+        #extract content
+        detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
+        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        articles['content'] = content
+        print('memasukkan berita id ', articles['id'])
+
         return all_articles

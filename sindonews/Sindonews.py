@@ -11,7 +11,7 @@ import time
 from requests.exceptions import ConnectionError
 
 class Sindonews:
-    def getIndeksLink(self, links, page, cat_link, offset=0, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
+    def getAllBerita(self, details, page, cat_link, offset=0, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
         """
         Untuk mengambil seluruh url
         link pada indeks category tertentu
@@ -27,7 +27,7 @@ class Sindonews:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            links = self.getIndeksLink(links, page+1, cat_link, offset+10, date)
+            details = self.getAllBerita(details, page+1, cat_link, offset+10, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -37,7 +37,8 @@ class Sindonews:
         if contentDiv:
             for post in contentDiv.findAll('div', class_="indeks-title"):
                 link = [post.find('a', href=True)['href'], ""]
-                links.append(link)
+                detail = self.getDetailBerita(link)
+        details.append(detail)
 
         el_page = soup.find('div', class_="pagination")
         if el_page:
@@ -45,86 +46,86 @@ class Sindonews:
 
             if page < max_page:
                 time.sleep(10)
-                links = self.getIndeksLink(links, page+1, cat_link, offset+10, date)
+                details = self.getAllBerita(details, page+1, cat_link, offset+10, date)
 
         return links
 
-    def getDetailBerita(self, links):
-        all_articles = []
-        for link in links:
-            time.sleep(10)
-            articles = {}
-            #link
-            url = link[0]
-            response = requests.get(url)
-            html = response.text
-            # Create a BeautifulSoup object from the HTML: soup
-            soup = BeautifulSoup(html, "html5lib")
+    def getDetailBerita(self, link):
 
-            #extract subcategory from breadcrumb
-            bc = soup.find('ul', class_="breadcrumb")
-            if not bc:
-                continue
-            cat = bc.findAll('a')[-2].text
-            sub = bc.findAll('a')[-1].text
 
-            #articleid
-            url_split = url.replace('//','').split('/')
-            article_id = url_split[2]
-            articles['id'] = article_id
+        time.sleep(10)
+        articles = {}
+        #link
+        url = link[0]
+        response = requests.get(url)
+        html = response.text
+        # Create a BeautifulSoup object from the HTML: soup
+        soup = BeautifulSoup(html, "html5lib")
 
-            #category
-            articles['category'] = cat
-            articles['subcategory'] = sub
+        #extract subcategory from breadcrumb
+        bc = soup.find('ul', class_="breadcrumb")
+        if not bc:
+            continue
+        cat = bc.findAll('a')[-2].text
+        sub = bc.findAll('a')[-1].text
 
-            #article_url
-            articles['url'] = url
+        #articleid
+        url_split = url.replace('//','').split('/')
+        article_id = url_split[2]
+        articles['id'] = article_id
 
-            #article
-            article = soup.find("div", id="content")
+        #category
+        articles['category'] = cat
+        articles['subcategory'] = sub
 
-            #extract date
-            pubdate = soup.find('time').text
-            pubdate = pubdate.strip(' \t\n\r')
-            pubdate = pubdate.replace(' WIB','')
-            articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y - %H:%M"), "%Y-%m-%d %H:%M:%S")
+        #article_url
+        articles['url'] = url
 
-            #extract author
-            reporter = soup.find('div', class_="reporter")
-            author = reporter.find('p', class_="author").find('a').text.strip(' ')
-            articles['author'] = author
+        #article
+        article = soup.find("div", id="content")
 
-            #extract title
-            title = soup.find('div', class_="article").find('h1').text
-            if ("foto" in title.lower()) or  "video" in title.lower():
-                continue
-            articles['title'] = title
+        #extract date
+        pubdate = soup.find('time').text
+        pubdate = pubdate.strip(' \t\n\r')
+        pubdate = pubdate.replace(' WIB','')
+        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y - %H:%M"), "%Y-%m-%d %H:%M:%S")
 
-            #source
-            articles['source'] = 'Sindonews'
+        #extract author
+        reporter = soup.find('div', class_="reporter")
+        author = reporter.find('p', class_="author").find('a').text.strip(' ')
+        articles['author'] = author
 
-            #extract comments count
-            articles['comments'] = 0
+        #extract title
+        title = soup.find('div', class_="article").find('h1').text
+        if ("foto" in title.lower()) or  "video" in title.lower():
+            continue
+        articles['title'] = title
 
-            #extract tags
-            #tags = soup.findAll('span', class_="tags--snippet__name")
-            #tags = ','.join([x.text for x in tags])
-            #articles['tags'] = tags
+        #source
+        articles['source'] = 'Sindonews'
 
-            #extract images
-            image = soup.find('div', class_="article").find('img')['src']
-            articles['image'] = image
+        #extract comments count
+        articles['comments'] = 0
 
-            #hapus link sisip image
-            for link in article.findAll('img'):
-                link.decompose()
+        #extract tags
+        #tags = soup.findAll('span', class_="tags--snippet__name")
+        #tags = ','.join([x.text for x in tags])
+        #articles['tags'] = tags
 
-            #extract content
-            detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-            content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        #extract images
+        image = soup.find('div', class_="article").find('img')['src']
+        articles['image'] = image
 
-            #articles['content'] = re.sub('google*','', content).strip(' ')
-            articles['content'] = content
-            #print('memasukkan berita id ', articles['id'])
-            all_articles.append(articles)
+        #hapus link sisip image
+        for link in article.findAll('img'):
+            link.decompose()
+
+        #extract content
+        detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
+        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+
+        #articles['content'] = re.sub('google*','', content).strip(' ')
+        articles['content'] = content
+        #print('memasukkan berita id ', articles['id'])
+
         return all_articles

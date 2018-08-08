@@ -12,7 +12,7 @@ from requests.exceptions import ConnectionError
 import mysql.connector
 
 class Otomart:
-    def getIndeksLink(self, links, page, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+    def getAllBerita(self, details, page, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
         Untuk mengambil seluruh url
         link pada indeks category tertentu
@@ -30,7 +30,7 @@ class Otomart:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            links = self.getIndeksLink(links, page+1, date)
+            details = self.getAllBerita(details, page+1, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -50,7 +50,8 @@ class Otomart:
                 flag = False
                 break
             else:
-                links.append(link)
+                detail = self.getDetailBerita(link)
+        details.append(detail)
         if flag:
             el_page = el_page = soup.find('div', class_="wp-pagenavi")
             if el_page:
@@ -59,86 +60,84 @@ class Otomart:
 
                 if last_page > active_page:
                     time.sleep(10)
-                    links = self.getIndeksLink(links, int(active_page)+1,date)
+                    details = self.getAllBerita(details, int(active_page)+1,date)
 
         con.close()
         return links
 
-    def getDetailBerita(self, links):
+    def getDetailBerita(self, link):
         """
         Mengambil seluruh element dari halaman berita
-        """
-        all_articles = []
-        for link in links:
-            time.sleep(10)
-            articles = {}
-            #link
-            url = link[0]
-            response = requests.get(url)
-            html = response.text
-            # Create a BeautifulSoup object from the HTML: soup
-            soup = BeautifulSoup(html, "html5lib")
+        """    
+        time.sleep(10)
+        articles = {}
+        #link
+        url = link[0]
+        response = requests.get(url)
+        html = response.text
+        # Create a BeautifulSoup object from the HTML: soup
+        soup = BeautifulSoup(html, "html5lib")
 
-            #extract subcategory from breadcrumb
-            bc = soup.find('a', attrs={"rel":"category tag"}).text
+        #extract subcategory from breadcrumb
+        bc = soup.find('a', attrs={"rel":"category tag"}).text
 
-            if ("foto" in sub.lower()) or  "video" in sub.lower():
-                continue
+        if ("foto" in sub.lower()) or  "video" in sub.lower():
+            continue
 
-            #category
-            articles['category'] = 'Otomotif'
-            articles['subcategory'] = bc
+        #category
+        articles['category'] = 'Otomotif'
+        articles['subcategory'] = bc
 
-            #article_url
-            articles['url'] = url
+        #article_url
+        articles['url'] = url
 
-            #article
-            article = soup.find('div', class_="entry-content")
+        #article
+        article = soup.find('div', class_="entry-content")
 
-            #extract date
-            pubdate = soup.find('meta', attrs={"property":"article:published_time"})['content']
-            pubdate = pubdate[0:19].strip(' \t\n\r')
-            articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+        #extract date
+        pubdate = soup.find('meta', attrs={"property":"article:published_time"})['content']
+        pubdate = pubdate[0:19].strip(' \t\n\r')
+        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
 
-            #articleid
-            articles['id'] = int(datetime.strptime(pubdate, "%d %B %Y").timestamp()) + len(url)
+        #articleid
+        articles['id'] = int(datetime.strptime(pubdate, "%d %B %Y").timestamp()) + len(url)
 
-            #extract editor
-            author = soup.find('span', class_="vcard author").find('span', class_="fn").text
-            articles['author'] = author
+        #extract editor
+        author = soup.find('span', class_="vcard author").find('span', class_="fn").text
+        articles['author'] = author
 
-            #extract title
-            title = soup.find('h1', class_="entry-title").text
-            articles['title'] = title
+        #extract title
+        title = soup.find('h1', class_="entry-title").text
+        articles['title'] = title
 
-            #source
-            articles['source'] = 'otomart.com'
+        #source
+        articles['source'] = 'otomart.com'
 
-            #extract comments count
-            articles['comments'] = int(soup.find('span', class_="postcommentscount").text.strip(' \t\n\r'))
+        #extract comments count
+        articles['comments'] = int(soup.find('span', class_="postcommentscount").text.strip(' \t\n\r'))
 
-            #extract tags
-            tags = soup.find('meta', attrs={"property":"article:tag"})['content']
-            articles['tags'] = ','.join([x.text for x in tags])
+        #extract tags
+        tags = soup.find('meta', attrs={"property":"article:tag"})['content']
+        articles['tags'] = ','.join([x.text for x in tags])
 
-            #extract images
-            image = soup.find('meta', attrs={"property":"og:image:secure_url"})
-            if image:
-                articles['image'] = image['content']
-            else:
-                articles['image'] = ''
+        #extract images
+        image = soup.find('meta', attrs={"property":"og:image:secure_url"})
+        if image:
+            articles['image'] = image['content']
+        else:
+            articles['image'] = ''
 
-            #hapus link sisip
-            for link in article.findAll('figure'):
-                link.decompose()
+        #hapus link sisip
+        for link in article.findAll('figure'):
+            link.decompose()
 
-            for link in article.findAll('h4'):
-                link.decompose()
+        for link in article.findAll('h4'):
+            link.decompose()
 
-            #extract content
-            detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-            content = re.sub(r'\n|\t|\b|\r','',detail.text)
-            articles['content']
-            #print('memasukkan berita id ', articles['id'])
-            all_articles.append(articles)
+        #extract content
+        detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
+        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        articles['content']
+        #print('memasukkan berita id ', articles['id'])
+
         return all_articles

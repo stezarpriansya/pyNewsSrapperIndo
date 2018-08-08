@@ -60,7 +60,7 @@ class Carreview:
                 # last_page = 3
                 if last_page != page:
                     time.sleep(10)
-                    details = self.getIndeksLink(details, page+1, cat, date)
+                    details = self.getAllBerita(details, page+1, cat, date)
 
         con.close()
         return details

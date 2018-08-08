@@ -15,7 +15,7 @@ import time
 # from selenium.webdriver.common.by import By
 
 class Kompas:
-    def getIndeksLink(self, links, page, cat_link, category, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
+    def getAllBerita(self, details, page, cat_link, category, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
         """
         Untuk mengambil seluruh url
         link pada indeks category tertentu
@@ -31,7 +31,7 @@ class Kompas:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            links = self.getIndeksLink(links, page+1, cat_link, category, date)
+            details = self.getAllBerita(details, page+1, cat_link, category, date)
 
         # Extract HTML texts contained in Response object: html
         html = response.text
@@ -40,7 +40,8 @@ class Kompas:
         contentDiv = soup.findAll('div', class_="article__list clearfix")
         for post in contentDiv:
             link = [post.find('a', href=True)['href'], category]
-            links.append(link)
+            detail = self.getDetailBerita(link)
+        details.append(detail)
 
         el_page =  soup.find('div', class_="paging__wrap clearfix")
         if el_page:
@@ -52,82 +53,81 @@ class Kompas:
 
             if page < max_page:
                 time.sleep(10)
-                links = self.getIndeksLink(links, page+1, cat_link, category, date)
+                details = self.getAllBerita(details, page+1, cat_link, category, date)
 
         return links
 
-    def getDetailBerita(self, links):
-        all_articles = []
-        for link in links:
-            time.sleep(10)
-            articles = {}
-            #link
-            url = link[0]
-            response = requests.get(url)
-            html = response.text
-            # Create a BeautifulSoup object from the HTML: soup
-            soup = BeautifulSoup(html, "html5lib")
+    def getDetailBerita(self, link):
 
-            #articleid
-            articles['id'] = int(soup.find("meta", attrs={'name':'cXenseParse:articleid'})['content'])
+        time.sleep(10)
+        articles = {}
+        #link
+        url = link[0]
+        response = requests.get(url)
+        html = response.text
+        # Create a BeautifulSoup object from the HTML: soup
+        soup = BeautifulSoup(html, "html5lib")
 
-            #category
-            articles['category'] = link[1]
-            articles['url'] = url
+        #articleid
+        articles['id'] = int(soup.find("meta", attrs={'name':'cXenseParse:articleid'})['content'])
 
-            #extract subcategory from breadcrumb
-            bc = soup.find('ul', class_="breadcrumb__wrap")
-            articles['subcategory'] = bc.findAll('li')[2].text
+        #category
+        articles['category'] = link[1]
+        articles['url'] = url
 
-            #article
-            article = soup.find("div", class_="read__content")
+        #extract subcategory from breadcrumb
+        bc = soup.find('ul', class_="breadcrumb__wrap")
+        articles['subcategory'] = bc.findAll('li')[2].text
 
-            #extract date
-            pubdate = soup.find("meta", attrs={"name":"content_PublishedDate"})['content']
-            pubdate = pubdate.strip(' \t\n\r')
-            articles['pubdate']=datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+        #article
+        article = soup.find("div", class_="read__content")
 
-            #extract author
-            articles['author'] = soup.find('div', class_="read__author").text
+        #extract date
+        pubdate = soup.find("meta", attrs={"name":"content_PublishedDate"})['content']
+        pubdate = pubdate.strip(' \t\n\r')
+        articles['pubdate']=datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
-            #extract title
-            articles['title'] = soup.find('h1', class_="read__title").text
+        #extract author
+        articles['author'] = soup.find('div', class_="read__author").text
 
-            #source
-            articles['source'] = 'kompas'
+        #extract title
+        articles['title'] = soup.find('h1', class_="read__title").text
 
-            #extract comments count
-            #articles['comments'] = 0
-            # options = Options()
-            # options.add_argument('--headless')
-            # options.add_argument('--disable-gpu')  # Last I checked this was necessary.
-            # options.add_argument('--disable-extensions')
-            #
-            # driver = webdriver.Chrome("../chromedriver.exe", chrome_options=options)
-            # driver.get(url)
-            # html = driver.page_source
-            # soup = BeautifulSoup(html, 'html5lib')
-            #
-            # comment = soup.find('div', class_="span4 comments-count tright")
-            # comment_num = comment.text.replace('Ada ', '')
-            # comment_num = comment_num.replace(' komentar untuk artikel ini', '')
-            # articles['comments'] = comment_num
+        #source
+        articles['source'] = 'kompas'
 
-            #extract tags
-            tags = soup.find("meta", attrs={'name':'content_tag'})['content']
-            articles['tags'] = tags
+        #extract comments count
+        #articles['comments'] = 0
+        # options = Options()
+        # options.add_argument('--headless')
+        # options.add_argument('--disable-gpu')  # Last I checked this was necessary.
+        # options.add_argument('--disable-extensions')
+        #
+        # driver = webdriver.Chrome("../chromedriver.exe", chrome_options=options)
+        # driver.get(url)
+        # html = driver.page_source
+        # soup = BeautifulSoup(html, 'html5lib')
+        #
+        # comment = soup.find('div', class_="span4 comments-count tright")
+        # comment_num = comment.text.replace('Ada ', '')
+        # comment_num = comment_num.replace(' komentar untuk artikel ini', '')
+        articles['comments'] = 0
 
-            #extract images
-            articles['images'] = soup.find('meta', attrs={'property':'og:image'})['content']
+        #extract tags
+        tags = soup.find("meta", attrs={'name':'content_tag'})['content']
+        articles['tags'] = tags
 
-            #hapus all script
-            for script in article.findAll('script'):
-                script.decompose()
+        #extract images
+        articles['images'] = soup.find('meta', attrs={'property':'og:image'})['content']
 
-            #extract content
-            detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-            content = re.sub(r'\n|\t|\b|\r','',detail.text)
-            articles['content'] = content
-            #print('memasukkan berita id ', articles['id'])
-            all_articles.append(articles)
+        #hapus all script
+        for script in article.findAll('script'):
+            script.decompose()
+
+        #extract content
+        detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
+        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        articles['content'] = content
+        #print('memasukkan berita id ', articles['id'])
+
         return all_articles
