@@ -70,7 +70,7 @@ class Tirto:
         #extract subcategory from breadcrumb
         bc = soup.find('ol', class_="breadcrumbs")
         if not bc:
-            continue
+            return False
         cat = bc.findAll('a')[-1].text
         #sub = bc.findAll('a')[-1].text
 
@@ -104,7 +104,7 @@ class Tirto:
         #extract title
         title = soup.find('h1', class_="news-detail-title text-center animated zoomInUp my-3").text
         if ("foto" in title.lower()) or  "video" in title.lower():
-            continue
+            return False
         articles['title'] = title
 
         #source

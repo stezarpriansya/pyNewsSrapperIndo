@@ -64,7 +64,7 @@ class Metrotv:
         #extract subcategory from breadcrumb
         bc = soup.find('div', class_="breadcrumbs")
         if not bc:
-            continue
+            return False
         cat = bc.findAll('a')[-2].text
         sub = bc.findAll('a')[-1].text
 
@@ -97,7 +97,7 @@ class Metrotv:
         #extract title
         articles['title'] = soup.find('meta', attrs={"property":"og:title"})['content']
         if ("foto" in sub.lower()) or  "video" in sub.lower():
-            continue
+            return False
 
         #source
         articles['source'] = 'metrotvnews'

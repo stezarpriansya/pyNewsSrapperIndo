@@ -82,11 +82,11 @@ class Otosia:
         #extract subcategory from breadcrumb
         bc = soup.find('div', attrs={"id":"v5-navigation"})
         if not bc:
-            continue
+            return False
 
         sub = bc.findAll('a')[-1].text
         if ("foto" in sub.lower()) or  "video" in sub.lower():
-            continue
+            return False
 
         #category
         articles['category'] = 'Otomotif'

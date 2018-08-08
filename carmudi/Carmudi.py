@@ -64,7 +64,7 @@ class Carmudi:
         #extract subcategory & category from breadcrumb
         bc = soup.find('div', class_="vw-post-categories")
         if not bc:
-            continue
+            return False
 
         if len(bc.findAll('a')) > 2 :
             cat = bc.findAll('a')[1].text

@@ -76,12 +76,12 @@ class Oto:
         #extract subcategory from breadcrumb
         bc = soup.find('ul', class_="breadcrumb")
         if not bc:
-            continue
+            return False
 
         sub = bc.findAll('li')[-2].text
 
         if ("foto" in sub.lower()) or  "video" in sub.lower():
-            continue
+            return False
 
         #category
         articles['category'] = 'Otomotif'

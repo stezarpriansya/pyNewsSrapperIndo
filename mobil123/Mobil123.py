@@ -52,7 +52,8 @@ class Mobil123:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                details.append(detail)
+                if detail:
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
@@ -63,6 +64,7 @@ class Mobil123:
                 if last_page > active_page:
                     time.sleep(10)
                     details = self.getAllBerita(details, int(active_page)+1, cat, date)
+
         con.close()
         return details
 
@@ -82,11 +84,11 @@ class Mobil123:
         #extract subcategory from breadcrumb
         bc = soup.find('div', class_="article__content--header")
         if not bc:
-            continue
+            return False
 
         sub = bc.findAll('a')[0].text
         if ("foto" in sub.lower()) or  "video" in sub.lower():
-            continue
+            return False
 
         #category
         articles['category'] = 'Otomotif'

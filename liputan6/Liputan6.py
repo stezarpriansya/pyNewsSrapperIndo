@@ -72,15 +72,15 @@ class Liputan6:
         #extract subcategory from breadcrumb
         #bc = soup.find('ul', class_="breadcrumb__wrap")
         #if not bc:
-        #    continue
+        #    return False
 
         bc = soup.find('ul', class_="read-page--breadcrumb")
         if not bc:
-            continue
+            return False
         cat = bc.findAll('a')[-2].text
         sub = bc.findAll('a')[-1].text
         if ("foto" in sub.lower()) or  "video" in sub.lower():
-            continue
+            return False
 
         #category
         articles['category'] = cat

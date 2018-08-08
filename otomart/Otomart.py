@@ -82,7 +82,7 @@ class Otomart:
         bc = soup.find('a', attrs={"rel":"category tag"}).text
 
         if ("foto" in sub.lower()) or  "video" in sub.lower():
-            continue
+            return False
 
         #category
         articles['category'] = 'Otomotif'

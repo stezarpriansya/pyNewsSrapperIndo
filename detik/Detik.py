@@ -67,11 +67,11 @@ class Detik:
         #extract subcategory from breadcrumb
         bc = soup.find('div', class_="breadcrumb")
         if not bc:
-            continue
+            return False
 
         sub = bc.findAll('a')[1].text
         if ("foto" in sub.lower()) or  "video" in sub.lower():
-            continue
+            return False
 
         articles['subcategory'] = sub
 

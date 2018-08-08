@@ -65,7 +65,7 @@ class Sindonews:
         #extract subcategory from breadcrumb
         bc = soup.find('ul', class_="breadcrumb")
         if not bc:
-            continue
+            return False
         cat = bc.findAll('a')[-2].text
         sub = bc.findAll('a')[-1].text
 
@@ -98,7 +98,7 @@ class Sindonews:
         #extract title
         title = soup.find('div', class_="article").find('h1').text
         if ("foto" in title.lower()) or  "video" in title.lower():
-            continue
+            return False
         articles['title'] = title
 
         #source
