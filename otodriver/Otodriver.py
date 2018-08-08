@@ -11,6 +11,7 @@ import html
 import json
 import time
 from requests.exceptions import ConnectionError
+import unicodedata
 import mysql.connector
 
 class Otodriver:
@@ -38,7 +39,7 @@ class Otodriver:
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('div', class_="col-lg-4 col-xs-12 col-md-6")
         flag = True
-        for post in indeks:
+        for post in indeks[:3]:
             link = [post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
             cursor = con.cursor()
@@ -58,8 +59,8 @@ class Otodriver:
         if flag:
             el_page = soup.find('ul', class_="pagination")
             if el_page:
-                last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
-                # last_page = 3
+                # last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
+                last_page = 2
                 if last_page != page:
                     time.sleep(10)
                     details = self.getAllBerita(details, page+1, cat, date)
@@ -91,7 +92,7 @@ class Otodriver:
         pubdate = article.find('meta', {'itemprop':'datePublished'})['content']
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
+        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S").timestamp()) + len(url)
 
         #extract author
         articles['author'] = soup.find('meta', {'property': 'article:author'})['content']
@@ -135,7 +136,7 @@ class Otodriver:
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",unicodedata.normalize("NFKD",detail.text)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
@@ -145,6 +146,7 @@ class Otodriver:
         """
         Untuk memasukkan berita ke DB
         """
+        print(articles)
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -152,12 +154,12 @@ class Otodriver:
         if result[0] <= 0:
             add_article = ("INSERT INTO article (post_id, author, pubdate, category, subcategory, content, comments, images, title, tags, url, source) VALUES (%(id)s, %(author)s, %(pubdate)s, %(category)s, %(subcategory)s, %(content)s, %(comments)s, %(images)s, %(title)s, %(tags)s, %(url)s, %(source)s)")
             # Insert article
-            if cursor.execute(add_article, articles):
-                cursor.close()
-                return True
-            else:
-                cursor.close()
-                return False
+            cursor.execute(add_article, articles)
+            con.commit()
+            print('masuk')
+            cursor.close()
+            return True
         else:
             cursor.close()
+            print('salah2')
             return False

@@ -9,6 +9,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import time
 from requests.exceptions import ConnectionError
+import unicodedata
 import mysql.connector
 
 class Otomart:
@@ -137,7 +138,7 @@ class Otomart:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
         articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 

@@ -11,6 +11,7 @@ import html
 import json
 import time
 from requests.exceptions import ConnectionError
+import unicodedata
 import mysql.connector
 
 class Mobil123:
@@ -139,7 +140,7 @@ class Mobil123:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
         articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 

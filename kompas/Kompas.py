@@ -8,6 +8,7 @@ import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from requests.exceptions import ConnectionError
+import unicodedata
 import time
 # from selenium import webdriver
 # from selenium.webdriver.support.wait import WebDriverWait
@@ -126,7 +127,7 @@ class Kompas:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
         articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 

@@ -9,6 +9,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import time
 from requests.exceptions import ConnectionError
+import unicodedata
 
 class Sindonews:
     def getAllBerita(self, details, page, cat_link, offset=0, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
@@ -122,7 +123,7 @@ class Sindonews:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
 
         #articles['content'] = re.sub('google*','', content).strip(' ')
         articles['content'] = content

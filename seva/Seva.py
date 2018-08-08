@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.options import Options
 import html
 import time
 from requests.exceptions import ConnectionError
+import unicodedata
 
 class Seva:
     def getAllBerita(self, details, page, cat_link, category):
@@ -108,7 +109,7 @@ class Seva:
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
         articles['content'] = html.unescape(content)
         print('memasukkan berita id ', articles['id'])
 
@@ -118,6 +119,7 @@ class Seva:
         """
         Untuk memasukkan berita ke DB
         """
+        print(articles)
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -125,12 +127,12 @@ class Seva:
         if result[0] <= 0:
             add_article = ("INSERT INTO article (post_id, author, pubdate, category, subcategory, content, comments, images, title, tags, url, source) VALUES (%(id)s, %(author)s, %(pubdate)s, %(category)s, %(subcategory)s, %(content)s, %(comments)s, %(images)s, %(title)s, %(tags)s, %(url)s, %(source)s)")
             # Insert article
-            if cursor.execute(add_article, articles):
-                cursor.close()
-                return True
-            else:
-                cursor.close()
-                return False
+            cursor.execute(add_article, articles)
+            con.commit()
+            print('masuk')
+            cursor.close()
+            return True
         else:
             cursor.close()
+            print('salah2')
             return False

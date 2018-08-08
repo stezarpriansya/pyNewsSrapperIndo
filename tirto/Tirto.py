@@ -11,6 +11,7 @@ import html
 import json
 import time
 from requests.exceptions import ConnectionError
+import unicodedata
 
 class Tirto:
     def getAllBerita(self, details, page, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
@@ -127,7 +128,7 @@ class Tirto:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
 
         #articles['content'] = re.sub('google*','', content).strip(' ')
         articles['content'] = content

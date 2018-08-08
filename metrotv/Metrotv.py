@@ -9,6 +9,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import time
 from requests.exceptions import ConnectionError
+import unicodedata
 
 class Metrotv:
     def getAllBerita(self, details, page, offset, cat_link, category, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
@@ -133,7 +134,7 @@ class Metrotv:
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',detail.text)
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
         articles['content'] = content.strip(' ')
         #print('memasukkan berita id ', articles['id'])
 
