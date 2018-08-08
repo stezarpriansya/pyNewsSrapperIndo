@@ -51,7 +51,8 @@ class Oto:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                details.append(detail)
+                if detail:
+                    details.append(detail)
         if flag:
             max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').text))/12)
             if page <= max_page:
@@ -126,17 +127,27 @@ class Oto:
         image = article.find('img')['src']
         articles['image'] = image
 
+        detail = article
         #hapus link sisip
-        for link in article.findAll('img'):
-            link.decompose()
+        for img in detail.findAll('img'):
+            img.decompose()
 
-        for link in article.findAll('div'):
-            link.decompose()
+        for div in detail.findAll('div'):
+            div.decompose()
 
+        for src in detail.findAll('p'):
+            if ("sumber:" in src.text.lower()):
+                src.decompose()
+
+        for p in detail.findAll('p'):
+            if ("baca juga" in p.text.lower()) and (p.find('a')):
+                p.decompose()
+        # print(detail)
         #extract content
-        detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
+        detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',detail.text)
-        articles['content']
+        # print(content)
+        articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 
         return articles
