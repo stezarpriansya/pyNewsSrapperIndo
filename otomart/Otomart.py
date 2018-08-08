@@ -37,8 +37,8 @@ class Otomart:
         soup = BeautifulSoup(html, "html5lib")
         div = soup.find('div', class_="wrap contentclass")
         indeks = div.findAll('article')
-        flag = False
-        for post in indeks[0:3]:
+        flag = True
+        for post in indeks:
             link = [post.find('a', href=True)['href'], '']
             #check if there are a post with same url
             cursor = con.cursor()
