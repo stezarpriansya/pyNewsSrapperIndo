@@ -31,7 +31,7 @@ class Otodriver:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            links = self.getAllBerita(links, page+1, cat, date)
+            details = self.getAllBerita(details, page+1, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
