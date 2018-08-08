@@ -38,8 +38,8 @@ class Mobil123:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('article', class_="article")
-        flag = True
-        for post in indeks:
+        flag = False
+        for post in indeks[0:3]:
             link = [post.find('a', href=True)['href'], '']
             #check if there are a post with same url
             cursor = con.cursor()
@@ -63,7 +63,7 @@ class Mobil123:
 
                 if last_page > active_page:
                     time.sleep(10)
-                    details = self.getAllBerita(details, int(active_page)+1, cat, date)
+                    details = self.getAllBerita(details, int(active_page)+1, date)
 
         con.close()
         return details
@@ -140,7 +140,7 @@ class Mobil123:
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',detail.text)
-        articles['content']
+        articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 
         return articles
