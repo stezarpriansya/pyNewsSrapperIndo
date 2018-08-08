@@ -91,7 +91,7 @@ class Carreview:
 
         #extract date
         pubdate = article.find('li', {'class':'publish-date'}).text.split(',')
-        pubdate = pubdate[1].strip(' \t\n\r')
+        pubdate = pubdate[1].strip(' \t\n\r').replace('Ags', 'Agt')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d-%b-%Y %H:%M"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
 

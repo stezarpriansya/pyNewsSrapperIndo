@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.options import Options
 import time
 from requests.exceptions import ConnectionError
 import unicodedata
+import json
 
 class Metrotv:
     def getAllBerita(self, details, page, offset, cat_link, category, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
@@ -85,16 +86,17 @@ class Metrotv:
         article = soup.find('div', class_="tru")
 
         #extract date
-        pubdate_author = soup.find("div",class_="reg").text
-        pubdate_author_split = pubdate_author.split(' \xa0\xa0 • \xa0\xa0 ')
-        pubdate = pubdate_author_split[1]
+        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[0].text)
+        pubdate_author = scripts['datePublished']
+        # pubdate_author_split = pubdate_author.split(' \xa0\xa0 • \xa0\xa0 ')
+        # pubdate = pubdate_author_split[1]
         pubdate = pubdate.strip(' ')
-        pubdate = pubdate.replace(' WIB','')
-        pubdate = datetime.strftime(datetime.strptime(pubdate, "%A, %d %b %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
+        # pubdate = pubdate.replace(' WIB','')
+        pubdate = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
         articles['pubdate'] = pubdate
 
         #extract author
-        author = pubdate_author_split[0]
+        author = scripts['datePublished']['name']
         articles['author'] = author
 
         #extract title
@@ -106,7 +108,7 @@ class Metrotv:
         articles['source'] = 'metrotvnews'
 
         #extract comments count
-        articles['comment'] = 0
+        articles['comments'] = 0
 
         #extract tags
         tags = soup.find('div', class_="line").findAll('a', class_="tag")

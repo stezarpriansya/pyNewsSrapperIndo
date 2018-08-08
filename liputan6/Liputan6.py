@@ -96,11 +96,11 @@ class Liputan6:
         article = soup.find("div", class_="article-content-body__item-content")
 
         #extract date
-        pubdate = soup.find('p', class_="read-page--header--author__datetime-wrapper").find('time').text
+        pubdate = soup.find('p', class_="read-page--header--author__datetime-wrapper").find('time')['datetime']
         pubdate = pubdate.strip(' \t\n\r')
-        pubdate = pubdate.replace(' WIB','')
-        articles['pubdate']=datetime.strftime(datetime.strptime(pubdate, "%d %b %Y, %H:%M"), "%Y-%m-%d %H:%M:%S")
-        articles['pubdate']
+        # pubdate = pubdate.replace(' WIB','').replace('Ags', 'Agt')
+        articles['pubdate']= datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+        articles['pubdate'] = pubdate
 
         #extract author
         author = soup.find('a', class_="read-page--header--author__link url fn").find('span', class_="read-page--header--author__name fn").text
