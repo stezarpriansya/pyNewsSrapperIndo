@@ -62,7 +62,7 @@ class Otodriver:
                 last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
                 # last_page = 2
                 if last_page != page:
-                    time.sleep(10)
+                    time.sleep(5)
                     details = self.getAllBerita(details, page+1, cat, date)
         con.close()
         return details
@@ -71,7 +71,7 @@ class Otodriver:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
@@ -146,7 +146,7 @@ class Otodriver:
         """
         Untuk memasukkan berita ke DB
         """
-        print(articles)
+
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)

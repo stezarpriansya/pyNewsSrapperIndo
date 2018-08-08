@@ -139,7 +139,7 @@ class Kompas:
         """
         Untuk memasukkan berita ke DB
         """
-        print(articles)
+
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)

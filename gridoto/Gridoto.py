@@ -65,7 +65,7 @@ class Gridoto:
                 active_page = int(el_page.find('li', class_="active").text.replace('\n', '').strip(' '))
                 # last_page = 2
                 if last_page != active_page:
-                    time.sleep(10)
+                    time.sleep(5)
                     details = self.getAllBerita(details, page+1, date)
 
         con.close()
@@ -75,7 +75,7 @@ class Gridoto:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]+'?page=all'
@@ -151,7 +151,7 @@ class Gridoto:
         """
         Untuk memasukkan berita ke DB
         """
-        print(articles)
+
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
