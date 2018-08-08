@@ -38,8 +38,8 @@ class Mobil123:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('article', class_="article")
-        flag = False
-        for post in indeks[0:3]:
+        flag = True
+        for post in indeks:
             link = [post.find('a', href=True)['href'], '']
             #check if there are a post with same url
             cursor = con.cursor()
