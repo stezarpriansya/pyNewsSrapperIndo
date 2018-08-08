@@ -129,6 +129,10 @@ class Detik:
         for script in detail.findAll('script'):
             script.decompose()
 
+        for p in detail.findAll('p'):
+           if ("baca juga" in p.text.lower()) and (p.find('a')):
+               p.decompose()
+
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',detail.text)

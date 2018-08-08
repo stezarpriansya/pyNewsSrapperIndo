@@ -115,7 +115,7 @@ class Idntimes:
             for b in detail.findAll('strong'):
                 if ("baca juga" in b.text.lower()):
                     b.decompose()
-
+        
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',detail.text)
