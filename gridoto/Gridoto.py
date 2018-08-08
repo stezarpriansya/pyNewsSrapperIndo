@@ -63,7 +63,7 @@ class Gridoto:
             if el_page:
                 last_page = int(el_page.findAll('li')[-1].text.replace('\n', '').strip(' '))
                 active_page = int(el_page.find('li', class_="active").text.replace('\n', '').strip(' '))
-                # last_page = 3
+                # last_page = 2
                 if last_page != active_page:
                     time.sleep(10)
                     details = self.getAllBerita(details, page+1, date)

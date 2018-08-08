@@ -52,10 +52,11 @@ class Oto:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                if detail:
+                if self.insertDB(detail):
                     details.append(detail)
         if flag:
             max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').text))/12)
+            # max_page = 2
             if page <= max_page:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, cat, date)

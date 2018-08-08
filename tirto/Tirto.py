@@ -46,7 +46,9 @@ class Tirto:
             for art in link_articles:
                 link = ['https://tirto.id'+art['articleUrl'], '']
                 detail = self.getDetailBerita(link)
-                details.append(detail)
+                if self.insertDB(con, detail):
+                    print("Insert berita ", detail['title'])
+                    details.append(detail)
 
         el_page = soup.find('ul', class_="custom-pagination p-0 text-center mb-5 col-10 offset-1")
         if el_page:

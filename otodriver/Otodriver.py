@@ -39,7 +39,7 @@ class Otodriver:
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('div', class_="col-lg-4 col-xs-12 col-md-6")
         flag = True
-        for post in indeks[:3]:
+        for post in indeks:
             link = [post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
             cursor = con.cursor()
@@ -59,8 +59,8 @@ class Otodriver:
         if flag:
             el_page = soup.find('ul', class_="pagination")
             if el_page:
-                # last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
-                last_page = 2
+                last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
+                # last_page = 2
                 if last_page != page:
                     time.sleep(10)
                     details = self.getAllBerita(details, page+1, cat, date)

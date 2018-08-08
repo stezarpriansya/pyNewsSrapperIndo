@@ -53,7 +53,8 @@ class Mobil123:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                if detail:
+                if self.insertDB(con, detail):
+                    print("Insert berita ", detail['title'])
                     details.append(detail)
 
         if flag:

@@ -39,7 +39,9 @@ class Liputan6:
             for post in contentDiv.findAll('figure'):
                 link = [post.find('a', href=True)['href'], category]
                 detail = self.getDetailBerita(link)
-                details.append(detail)
+                if self.insertDB(con, detail):
+                    print("Insert berita ", detail['title'])
+                    details.append(detail)
 
         el_page = soup.find('div', class_="simple-pagination__container")
         if el_page:

@@ -52,7 +52,8 @@ class Otomart:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                if detail:
+                if self.insertDB(con, detail):
+                    print("Insert berita ", detail['title'])
                     details.append(detail)
         if flag:
             el_page = el_page = soup.find('div', class_="wp-pagenavi")

@@ -39,7 +39,9 @@ class Sindonews:
             for post in contentDiv.findAll('div', class_="indeks-title"):
                 link = [post.find('a', href=True)['href'], ""]
                 detail = self.getDetailBerita(link)
-                details.append(detail)
+                if self.insertDB(con, detail):
+                    print("Insert berita ", detail['title'])
+                    details.append(detail)
 
         el_page = soup.find('div', class_="pagination")
         if el_page:
