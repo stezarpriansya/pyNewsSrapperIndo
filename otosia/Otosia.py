@@ -14,7 +14,7 @@ from requests.exceptions import ConnectionError
 import mysql.connector
 
 class Otosia:
-    def getAllBerita(self, details, page, cat_link, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+    def getAllBerita(self, details, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
         Untuk mengambil seluruh url
         link pada indeks category tertentu
@@ -23,7 +23,10 @@ class Otosia:
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
-        url = "https://www.otosia.com/"+cat_link+"/index"+str(page)+".html"
+        if page==1:
+            url = "https://www.otosia.com/"+cat+"/index.html"
+        else:
+            url = "https://www.otosia.com/"+cat+"/index"+str(page)+".html"
         print(url)
 
         # Make the request and create the response object: response
@@ -32,14 +35,14 @@ class Otosia:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat, category, date)
+            details = self.getAllBerita(details, page+1, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        indeks = soup.find('div', attrs={"id":"mobart-box-big"})
-        flag = True
-        for post in indeks.findAll('h2'):
+        indeks = soup.findAll('li', class_="artbox-text")
+        flag = False
+        for post in indeks[0:3]:
             link = ["https://www.otosia.com"+ post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
             cursor = con.cursor()
@@ -52,7 +55,8 @@ class Otosia:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                details.append(detail)
+                if detail:
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="simple-pagination__container")
@@ -72,6 +76,7 @@ class Otosia:
         Mengambil seluruh element dari halaman berita
         """
         time.sleep(10)
+        articles = {}
         #link
         url = link[0]
         response = requests.get(url)
@@ -105,7 +110,7 @@ class Otosia:
         articles['pubdate']
 
         #articleid
-        articles['id'] = int(datetime.strptime(pubdate, "%d %B %Y").timestamp()) + len(url)
+        articles['id'] = int(datetime.strptime(pubdate, "%A, %d %B %Y %H:%M").timestamp()) + len(url)
 
         #extract editor
         author = soup.findAll('span', class_="newsdetail-schedule")[1].text
@@ -133,13 +138,17 @@ class Otosia:
         articles['image'] = image
 
         #hapus link sisip
-        for link in article.findAll('div'):
-            link.decompose()
+        for div in article.findAll('div'):
+            div.decompose()
+
+        for tabel in article.findAll('table'):
+            tabel.decompose()
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',detail.text)
-        articles['content']
+        content = content.replace('\xa0', '')
+        articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 
         return articles
