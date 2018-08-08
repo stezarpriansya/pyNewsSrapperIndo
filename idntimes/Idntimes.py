@@ -11,6 +11,7 @@ import html
 import json
 import time
 from requests.exceptions import ConnectionError
+import mysql.connector
 
 class Idntimes:
     def getAllBerita(self, details, cat_link, page, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
@@ -19,6 +20,7 @@ class Idntimes:
         link pada indeks category tertentu
         date format : YYYY-mm-dd
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
         url = "https://www.idntimes.com/ajax/index?category="+cat_link+"&type=all&page="+str(page)+"&date="+date
         print(url)
@@ -38,10 +40,12 @@ class Idntimes:
             for post in indeks:
                 link = [post.find('a', href=True)['href'], cat_link]
                 detail = self.getDetailBerita(link)
-                details.append(detail)
+                if self.insertDB(con, detail):
+                    print("Insert berita ", detail['title'])
+                    details.append(detail)
             time.sleep(10)
             details = self.getAllBerita(details, cat_link, page+1, date)
-
+        con.close()
         return details
 
     def getDetailBerita(self, link):
@@ -119,3 +123,24 @@ class Idntimes:
         print('memasukkan berita id ', articles['id'])
 
         return articles
+
+    def insertDB(self, con, articles):
+        """
+        Untuk memasukkan berita ke DB
+        """
+        cursor = con.cursor()
+        query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
+        cursor.execute(query)
+        result = cursor.fetchone()
+        if result[0] <= 0:
+            add_article = ("INSERT INTO article (post_id, author, pubdate, category, subcategory, content, comments, images, title, tags, url, source) VALUES (%(id)s, %(author)s, %(pubdate)s, %(category)s, %(subcategory)s, %(content)s, %(comments)s, %(images)s, %(title)s, %(tags)s, %(url)s, %(source)s)")
+            # Insert article
+            if cursor.execute(add_article, articles):
+                cursor.close()
+                return True
+            else:
+                cursor.close()
+                return False
+        else:
+            cursor.close()
+            return False

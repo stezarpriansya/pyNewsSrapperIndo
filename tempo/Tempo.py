@@ -11,6 +11,7 @@ import html
 import json
 import time
 from requests.exceptions import ConnectionError
+import mysql.connector
 
 class Tempo:
     def getAllBerita(self, details, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
@@ -22,6 +23,7 @@ class Tempo:
     #     print("page ", page)
         url = "https://www.tempo.co/indeks/"+date
         print(url)
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         # Make the request and create the response object: response
         try:
             response = requests.get(url)
@@ -39,8 +41,11 @@ class Tempo:
             for post in indeks:
                 link = [post.find('a', {'class':'col'}, href=True)['href'], ""]
                 detail = self.getDetailBerita(link)
-                details.append(detail)
+                if self.insertDB(con, detail):
+                    print("Insert berita ", detail['title'])
+                    details.append(detail)
     #         links = getIndeksLink(links, date)
+        con.close()
         return details
 
     def getDetailBerita(self, link):
@@ -118,3 +123,24 @@ class Tempo:
         print('memasukkan berita id ', articles['id'])
 
         return articles
+
+    def insertDB(self, con, articles):
+        """
+        Untuk memasukkan berita ke DB
+        """
+        cursor = con.cursor()
+        query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
+        cursor.execute(query)
+        result = cursor.fetchone()
+        if result[0] <= 0:
+            add_article = ("INSERT INTO article (post_id, author, pubdate, category, subcategory, content, comments, images, title, tags, url, source) VALUES (%(id)s, %(author)s, %(pubdate)s, %(category)s, %(subcategory)s, %(content)s, %(comments)s, %(images)s, %(title)s, %(tags)s, %(url)s, %(source)s)")
+            # Insert article
+            if cursor.execute(add_article, articles):
+                cursor.close()
+                return True
+            else:
+                cursor.close()
+                return False
+        else:
+            cursor.close()
+            return False

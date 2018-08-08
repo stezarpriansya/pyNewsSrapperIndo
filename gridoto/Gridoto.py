@@ -53,7 +53,9 @@ class Gridoto:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                details.append(detail)
+                if self.insertDB(con, detail):
+                    print("Insert berita ", detail['title'])
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination_number")
@@ -143,3 +145,24 @@ class Gridoto:
         print('memasukkan berita id ', articles['id'])
 
         return articles
+
+    def insertDB(self, con, articles):
+        """
+        Untuk memasukkan berita ke DB
+        """
+        cursor = con.cursor()
+        query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
+        cursor.execute(query)
+        result = cursor.fetchone()
+        if result[0] <= 0:
+            add_article = ("INSERT INTO article (post_id, author, pubdate, category, subcategory, content, comments, images, title, tags, url, source) VALUES (%(id)s, %(author)s, %(pubdate)s, %(category)s, %(subcategory)s, %(content)s, %(comments)s, %(images)s, %(title)s, %(tags)s, %(url)s, %(source)s)")
+            # Insert article
+            if cursor.execute(add_article, articles):
+                cursor.close()
+                return True
+            else:
+                cursor.close()
+                return False
+        else:
+            cursor.close()
+            return False
