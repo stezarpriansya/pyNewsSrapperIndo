@@ -52,7 +52,7 @@ class Mobil123:
                 break
             else:
                 detail = self.getDetailBerita(link)
-        details.append(detail)
+                details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
@@ -64,7 +64,7 @@ class Mobil123:
                     time.sleep(10)
                     details = self.getAllBerita(details, int(active_page)+1, cat, date)
         con.close()
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -141,4 +141,4 @@ class Mobil123:
         articles['content']
         #print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

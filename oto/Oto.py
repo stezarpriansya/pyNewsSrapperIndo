@@ -51,14 +51,14 @@ class Oto:
                 break
             else:
                 detail = self.getDetailBerita(link)
-        details.append(detail)
+                details.append(detail)
         if flag:
             max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').text))/12)
             if page <= max_page:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, cat, date)
         con.close
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -139,4 +139,4 @@ class Oto:
         articles['content']
         #print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

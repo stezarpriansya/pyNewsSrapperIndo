@@ -39,9 +39,9 @@ class Tempo:
             for post in indeks:
                 link = [post.find('a', {'class':'col'}, href=True)['href'], ""]
                 detail = self.getDetailBerita(link)
-        details.append(detail)
+                details.append(detail)
     #         links = getIndeksLink(links, date)
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -117,4 +117,4 @@ class Tempo:
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

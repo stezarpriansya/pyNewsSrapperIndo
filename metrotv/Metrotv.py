@@ -36,7 +36,7 @@ class Metrotv:
         for post in contentDiv:
             link = [post.find('a',href=True)['href']]
             detail = self.getDetailBerita(link)
-        details.append(detail)
+            details.append(detail)
 
         el_page = soup.find('div', class_="grid")
         if el_page:
@@ -47,7 +47,7 @@ class Metrotv:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, offset+30, cat_link, category, date)
 
-        return links
+        return details
 
     def getDetailBerita(self, url):
         time.sleep(10)
@@ -137,4 +137,4 @@ class Metrotv:
         articles['content'] = content.strip(' ')
         #print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

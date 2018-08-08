@@ -38,11 +38,11 @@ class Idntimes:
             for post in indeks:
                 link = [post.find('a', href=True)['href'], cat_link]
                 detail = self.getDetailBerita(link)
-        details.append(detail)
+                details.append(detail)
             time.sleep(10)
             details = self.getAllBerita(details, cat_link, page+1, date)
 
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -118,4 +118,4 @@ class Idntimes:
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

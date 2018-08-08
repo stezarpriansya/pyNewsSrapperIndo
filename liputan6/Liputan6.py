@@ -38,7 +38,7 @@ class Liputan6:
             for post in contentDiv.findAll('figure'):
                 link = [post.find('a', href=True)['href'], category]
                 detail = self.getDetailBerita(link)
-        details.append(detail)
+                details.append(detail)
 
         el_page = soup.find('div', class_="simple-pagination__container")
         if el_page:
@@ -53,7 +53,7 @@ class Liputan6:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, cat_link, category, date)
 
-        return links
+        return details
 
     def getDetailBerita(self, link):
 
@@ -147,4 +147,4 @@ class Liputan6:
         articles['content']
         #print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

@@ -152,4 +152,4 @@ class Viva:
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

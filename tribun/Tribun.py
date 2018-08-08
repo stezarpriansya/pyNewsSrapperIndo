@@ -67,7 +67,7 @@ class Tribun:
                     details = self.getAllBerita(details, page+1, date)
 
         con.close()
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -144,4 +144,4 @@ class Tribun:
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

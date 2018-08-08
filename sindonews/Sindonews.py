@@ -38,7 +38,7 @@ class Sindonews:
             for post in contentDiv.findAll('div', class_="indeks-title"):
                 link = [post.find('a', href=True)['href'], ""]
                 detail = self.getDetailBerita(link)
-        details.append(detail)
+                details.append(detail)
 
         el_page = soup.find('div', class_="pagination")
         if el_page:
@@ -48,7 +48,7 @@ class Sindonews:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, cat_link, offset+10, date)
 
-        return links
+        return details
 
     def getDetailBerita(self, link):
 
@@ -128,4 +128,4 @@ class Sindonews:
         articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

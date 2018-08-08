@@ -11,6 +11,7 @@ import html
 import json
 import time
 from requests.exceptions import ConnectionError
+import mysql.connector
 
 class Antara:
     def getAllBerita(self, details, page, date=datetime.strftime(datetime.today(), '%d-%m-%Y')):
@@ -38,7 +39,7 @@ class Antara:
         for post in indeks:
             link = [post.find('a', href=True)['href'], ""]
             detail = self.getDetailBerita(link)
-        details.append(detail)
+            details.append(detail)
 
         el_page = soup.find('ul', class_="pagination pagination-sm")
         if el_page:
@@ -49,7 +50,7 @@ class Antara:
                 time.sleep(10)
                 details = self.getAllBerita(details, int(active_page)+1, date)
 
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -129,5 +130,5 @@ class Antara:
         content = re.sub(r'\n|\t|\b|\r','',detail.text)
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
-        
-        return all_articles
+
+        return articles

@@ -55,7 +55,7 @@ class Tirto:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, date)
 
-        return links
+        return details
 
     def getDetailBerita(self, link):
         time.sleep(10)
@@ -133,4 +133,4 @@ class Tirto:
         articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

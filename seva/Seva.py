@@ -37,7 +37,7 @@ class Seva:
         for post in indeks:
             link = [post.find('a', href=True)['href'], category]
             detail = self.getDetailBerita(link)
-        details.append(detail)
+            details.append(detail)
 
         el_page = soup.find('nav', attrs={'aria-label':'Page navigation example'})
         if el_page:
@@ -47,7 +47,7 @@ class Seva:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, cat_link, category)
 
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -109,4 +109,4 @@ class Seva:
         articles['content'] = html.unescape(content)
         print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

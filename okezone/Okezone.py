@@ -38,7 +38,7 @@ class Okezone:
         for post in indeks:
             link = [post.find('a', href=True)['href'], ""]
             detail = self.getDetailBerita(link)
-        details.append(detail)
+            details.append(detail)
 
         el_page = soup.find('div', class_="pagination-indexs")
         if el_page:
@@ -48,7 +48,7 @@ class Okezone:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, page*15, date)
 
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -145,4 +145,4 @@ class Okezone:
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

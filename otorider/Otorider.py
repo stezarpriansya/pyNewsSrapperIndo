@@ -59,7 +59,7 @@ class Otorider:
             time.sleep(10)
             details = self.getAllBerita(details, page+1, cat, date)
         con.close()
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -141,4 +141,4 @@ class Otorider:
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

@@ -36,7 +36,7 @@ class Carmudi:
         for post in indeks:
             link = [post.find('a', href=True)['href'], ""]
             detail = self.getDetailBerita(link)
-        details.append(detail)
+            details.append(detail)
 
         el_page = soup.find('div', class_="vw-page-navigation-pagination")
         if el_page:
@@ -46,7 +46,7 @@ class Carmudi:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1)
 
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -128,4 +128,4 @@ class Carmudi:
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

@@ -51,7 +51,7 @@ class Otomart:
                 break
             else:
                 detail = self.getDetailBerita(link)
-        details.append(detail)
+                details.append(detail)
         if flag:
             el_page = el_page = soup.find('div', class_="wp-pagenavi")
             if el_page:
@@ -63,12 +63,12 @@ class Otomart:
                     details = self.getAllBerita(details, int(active_page)+1,date)
 
         con.close()
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
         Mengambil seluruh element dari halaman berita
-        """    
+        """
         time.sleep(10)
         articles = {}
         #link
@@ -140,4 +140,4 @@ class Otomart:
         articles['content']
         #print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

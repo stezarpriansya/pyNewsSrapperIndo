@@ -52,7 +52,7 @@ class Otosia:
                 break
             else:
                 detail = self.getDetailBerita(link)
-        details.append(detail)
+                details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="simple-pagination__container")
@@ -65,7 +65,7 @@ class Otosia:
                     details = self.getAllBerita(details, int(active_page)+1, cat, date)
 
         con.close()
-        return links
+        return details
 
     def getDetailBerita(self, link):
         """
@@ -142,4 +142,4 @@ class Otosia:
         articles['content']
         #print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles

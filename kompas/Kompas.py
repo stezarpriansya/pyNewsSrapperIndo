@@ -41,7 +41,7 @@ class Kompas:
         for post in contentDiv:
             link = [post.find('a', href=True)['href'], category]
             detail = self.getDetailBerita(link)
-        details.append(detail)
+            details.append(detail)
 
         el_page =  soup.find('div', class_="paging__wrap clearfix")
         if el_page:
@@ -55,7 +55,7 @@ class Kompas:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, cat_link, category, date)
 
-        return links
+        return details
 
     def getDetailBerita(self, link):
 
@@ -130,4 +130,4 @@ class Kompas:
         articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 
-        return all_articles
+        return articles
