@@ -37,8 +37,8 @@ class Otomart:
         soup = BeautifulSoup(html, "html5lib")
         div = soup.find('div', class_="wrap contentclass")
         indeks = div.findAll('article')
-        flag = True
-        for post in indeks:
+        flag = False
+        for post in indeks[0:3]:
             link = [post.find('a', href=True)['href'], '']
             #check if there are a post with same url
             cursor = con.cursor()
@@ -51,7 +51,8 @@ class Otomart:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                details.append(detail)
+                if detail:
+                    details.append(detail)
         if flag:
             el_page = el_page = soup.find('div', class_="wp-pagenavi")
             if el_page:
@@ -81,7 +82,7 @@ class Otomart:
         #extract subcategory from breadcrumb
         bc = soup.find('a', attrs={"rel":"category tag"}).text
 
-        if ("foto" in sub.lower()) or  "video" in sub.lower():
+        if ("foto" in bc.lower()) or  "video" in bc.lower():
             return False
 
         #category
@@ -100,7 +101,7 @@ class Otomart:
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
 
         #articleid
-        articles['id'] = int(datetime.strptime(pubdate, "%d %B %Y").timestamp()) + len(url)
+        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
 
         #extract editor
         author = soup.find('span', class_="vcard author").find('span', class_="fn").text
@@ -117,8 +118,8 @@ class Otomart:
         articles['comments'] = int(soup.find('span', class_="postcommentscount").text.strip(' \t\n\r'))
 
         #extract tags
-        tags = soup.find('meta', attrs={"property":"article:tag"})['content']
-        articles['tags'] = ','.join([x.text for x in tags])
+        tags = soup.findAll('meta', attrs={"property":"article:tag"})
+        articles['tags'] = ','.join([x['content'] for x in tags])
 
         #extract images
         image = soup.find('meta', attrs={"property":"og:image:secure_url"})
@@ -137,7 +138,7 @@ class Otomart:
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',detail.text)
-        articles['content']
+        articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 
         return articles
