@@ -154,23 +154,24 @@ class Otosia:
 
         return articles
 
-        def insertDB(self, con, articles):
-            """
-            Untuk memasukkan berita ke DB
-            """
-            cursor = con.cursor()
-            query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            if result[0] <= 0:
-                add_article = ("INSERT INTO article (post_id, author, pubdate, category, subcategory, content, comments, images, title, tags, url, source) VALUES (%(id)s, %(author)s, %(pubdate)s, %(category)s, %(subcategory)s, %(content)s, %(comments)s, %(images)s, %(title)s, %(tags)s, %(url)s, %(source)s)")
-                # Insert article
-                if cursor.execute(add_article, articles):
-                    cursor.close()
-                    return True
-                else:
-                    cursor.close()
-                    return False
-            else:
-                cursor.close()
-                return False
+    def insertDB(self, con, articles):
+        """
+        Untuk memasukkan berita ke DB
+        """
+        print(articles)
+        cursor = con.cursor()
+        query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
+        cursor.execute(query)
+        result = cursor.fetchone()
+        if result[0] <= 0:
+            add_article = ("INSERT INTO article (post_id, author, pubdate, category, subcategory, content, comments, images, title, tags, url, source) VALUES (%(id)s, %(author)s, %(pubdate)s, %(category)s, %(subcategory)s, %(content)s, %(comments)s, %(images)s, %(title)s, %(tags)s, %(url)s, %(source)s)")
+            # Insert article
+            cursor.execute(add_article, articles)
+            con.commit()
+            print('masuk')
+            cursor.close()
+            return True
+        else:
+            cursor.close()
+            print('salah2')
+            return False
