@@ -41,7 +41,7 @@ class Gridoto:
         indeks = soup.findAll('div', class_="news-list__item l-index clearfix")
         flag = True
         for post in indeks:
-            subcategory = post.find('a', class_="cateskew").text.strip(' \t\n\r')
+            subcategory = post.find('a', class_="cateskew").get_text(strip=True).strip(' \t\n\r')
             link = [post.find('a', class_="news-list__link", href=True)['href'], subcategory]
             #check if there are a post with same url
             cursor = con.cursor()
@@ -56,14 +56,14 @@ class Gridoto:
             # else:
             detail = self.getDetailBerita(link)
             if self.insertDB(con, detail):
-                # print("Insert berita ", detail['title'])
+                # print("Insert berita ", articles['title'])
                 details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination_number")
             if el_page:
                 last_page = el_page.findAll('li')[-1].find('a')['data-ci-pagination-page'].replace('\n', '').strip(' ')
-                active_page = el_page.find('li', class_="active").text.replace('\n', '').strip(' ')
+                active_page = el_page.find('li', class_="active").get_text(strip=True).replace('\n', '').strip(' ')
                 # last_page = 2
                 if last_page != active_page:
                     time.sleep(5)
@@ -85,7 +85,7 @@ class Gridoto:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html2, "html5lib")
         print(url)
-        scripts = json.loads(html.unescape(soup.findAll('script', {'type':'application/ld+json'})[-1].text))
+        scripts = json.loads(html.unescape(soup.findAll('script', {'type':'application/ld+json'})[-1].get_text(strip=True)))
         #category
         articles['category'] = 'Otomotif'
         articles['subcategory'] = link[1]
@@ -137,12 +137,12 @@ class Gridoto:
         #hapus linksisip
         for ls in detail.findAll('p'):
             if ls.find('strong'):
-                if 'baca' in ls.find('strong').text.lower():
+                if 'baca' in ls.find('strong').get_text(strip=True).lower():
                     ls.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 

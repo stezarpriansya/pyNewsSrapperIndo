@@ -31,7 +31,7 @@ class Okezone:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, page*15, date)
+            details = self.getAllBerita(details, page, page*15, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -42,7 +42,6 @@ class Okezone:
             link = [post.find('a', href=True)['href'], ""]
             detail = self.getDetailBerita(link)
             if self.insertDB(con, detail):
-                print("Insert berita ", detail['title'])
                 details.append(detail)
 
         el_page = soup.find('div', class_="pagination-indexs")
@@ -69,15 +68,15 @@ class Okezone:
         soup = BeautifulSoup(html, "html5lib")
 
         #extract scrip json ld
-        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})[-1].text
+        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})[-1].get_text(strip=True)
         scripts = json.loads(scripts)
 
         #extract subcategory from breadcrumb
         bc = soup.find('div', class_="breadcrumb")
         if not bc:
             return False
-        cat = bc.findAll('a')[-2].text
-        sub = bc.findAll('a')[-1].text
+        cat = bc.findAll('a')[-2].get_text(strip=True)
+        sub = bc.findAll('a')[-1].get_text(strip=True)
         if ("foto" in sub.lower()) or  ("video" in sub.lower()):
             return False
 
@@ -106,11 +105,11 @@ class Okezone:
         articles['source'] = 'okezone'
 
         #extract comments count
-        articles['comments'] = int(soup.find('span', class_="commentWidget-total").find('b').text.strip(' \t\n\r'))
+        articles['comments'] = int(soup.find('span', class_="commentWidget-total").find('b').get_text(strip=True).strip(' \t\n\r'))
 
         #extract tags
         tags = article.find('div', class_="detail-tag").findAll('a')
-        articles['tags'] = ','.join([x.text for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
 
         #extract images
         articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
@@ -141,12 +140,12 @@ class Okezone:
         #hapus linksisip
         for ls in detail.findAll('a'):
             if ls.find('strong'):
-                if 'baca' in ls.find('strong').text.lower():
+                if 'baca' in ls.find('strong').get_text(strip=True).lower():
                     ls.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
@@ -156,6 +155,7 @@ class Okezone:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

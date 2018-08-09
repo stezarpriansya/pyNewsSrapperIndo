@@ -32,7 +32,7 @@ class Carreview:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat, date)
+            details = self.getAllBerita(details, page, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -53,13 +53,13 @@ class Carreview:
             else:
                 detail = self.getDetailBerita(link)
                 if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
+
                     details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
             if el_page:
-                last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
+                last_page = int(el_page.findAll('li')[-2].get_text(strip=True).replace('\n', '').strip(' '))
                 # last_page = 3
                 if last_page != page:
                     time.sleep(5)
@@ -90,16 +90,16 @@ class Carreview:
         article = soup.find('div', class_="left-content")
 
         #extract date
-        pubdate = article.find('li', {'class':'publish-date'}).text.split(',')
+        pubdate = article.find('li', {'class':'publish-date'}).get_text(strip=True).split(',')
         pubdate = pubdate[1].strip(' \t\n\r').replace('Ags', 'Agt').replace('Juli', 'Jul').replace('Juni', 'Jun')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d-%b-%Y %H:%M"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
 
         #extract author
-        articles['author'] = article.find('span', {'itemprop': 'author'}).text
+        articles['author'] = article.find('span', {'itemprop': 'author'}).get_text(strip=True)
 
         #extract title
-        articles['title'] = article.find('h1', {'class': 'entry-title'}).text
+        articles['title'] = article.find('h1', {'class': 'entry-title'}).get_text(strip=True)
 
         #source
         articles['source'] = 'carreview'
@@ -109,7 +109,7 @@ class Carreview:
 
         #extract tags
         tags = article.find('div', class_="post-meta").findAll('a')
-        articles['tags'] = ','.join([x.text.replace('#', '') for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags])
 
         #extract images
         articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
@@ -136,12 +136,12 @@ class Carreview:
         #hapus linksisip
         for ls in detail.findAll('a'):
             if ls.find('strong'):
-                if 'baca' in ls.find('strong').text.lower():
+                if 'baca' in ls.find('strong').get_text(strip=True).lower():
                     ls.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
@@ -151,7 +151,7 @@ class Carreview:
         """
         Untuk memasukkan berita ke DB
         """
-
+        print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)

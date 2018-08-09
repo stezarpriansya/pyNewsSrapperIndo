@@ -90,14 +90,14 @@ class Cintamobil:
 
         #extract date
         # print(article)
-        pubdate = article.find('h1', {'class':'title fsize-20 fweight-bold mg-bottom-5'}).findNextSiblings()[0].find('span').text
+        pubdate = article.find('h1', {'class':'title fsize-20 fweight-bold mg-bottom-5'}).findNextSiblings()[0].find('span').get_text(strip=True)
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d/%m/%Y"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = soup.find('input', {'id':'ArticleId'}).get('value')
 
         #extract author
         author = article.find('span', {'class': 'blue-clr text-right full-width display-ib'})
-        articles['author'] = author.text if author else ''
+        articles['author'] = author.get_text(strip=True) if author else ''
 
         #extract title
         title = soup.find('meta', {'property': 'og:title'})
@@ -111,7 +111,7 @@ class Cintamobil:
 
         #extract tags
         tags = article.find('div', class_="w--100 pull-left text-left mg-top-20")
-        articles['tags'] = ','.join([x.text for x in tags.findAll('a')]) if tags else ''
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
         images = soup.find("meta", attrs={'property':'og:image'})
@@ -135,12 +135,12 @@ class Cintamobil:
         #hapus detailsisip
         for ls in detail.findAll('a'):
             if ls.find('strong'):
-                if 'baca' in ls.find('strong').text.lower():
+                if 'baca' in ls.find('strong').get_text(strip=True).lower():
                     ls.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 

@@ -32,7 +32,7 @@ class Tribun:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, date)
+            details = self.getAllBerita(details, page, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -53,7 +53,6 @@ class Tribun:
             else:
                 detail = self.getDetailBerita(link)
                 if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
                     details.append(detail)
 
         if flag:
@@ -85,7 +84,7 @@ class Tribun:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
 
-        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[0].text)
+        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[0].get_text(strip=True))
         #category
         categories = soup.findAll('meta', {'name':'cXenseParse:category'})
         articles['category'] = categories[0]['content']
@@ -115,7 +114,7 @@ class Tribun:
 
         #extract tags
         tags = article.find('div', class_="mb10 f16 ln24 mb10 mt5").findAll('a')
-        articles['tags'] = ','.join([x.text.replace('#', '') for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags])
 
         #extract images
         articles['images'] = scripts['image']['url']
@@ -138,12 +137,12 @@ class Tribun:
         #hapus linksisip
         for ls in detail.findAll('p', class_="baca"):
             if ls.find('strong'):
-                if 'baca' in ls.find('strong').text.lower():
+                if 'baca' in ls.find('strong').get_text(strip=True).lower():
                     ls.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
@@ -153,6 +152,7 @@ class Tribun:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

@@ -60,7 +60,7 @@ class Otomart:
             el_page = soup.find('div', class_="wp-pagenavi")
             if el_page:
                 last_page = int(el_page.findAll('a', href=True)[-1]['href'].split('page/')[-1].replace('\n', '').strip(' '))
-                # active_page = int(el_page.find('span', class_="current").text.replace('\n', '').strip(' '))
+                # active_page = int(el_page.find('span', class_="current").get_text(strip=True).replace('\n', '').strip(' '))
 
                 if page <= last_page:
                     time.sleep(5)
@@ -87,7 +87,7 @@ class Otomart:
         if not bc:
             return False
 
-        sub = bc.text
+        sub = bc.get_text(strip=True)
         if ("foto" in sub.lower()) or  "video" in sub.lower():
             return False
 
@@ -110,18 +110,18 @@ class Otomart:
         articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
 
         #extract editor
-        author = soup.find('span', class_="vcard author").find('span', class_="fn").text
+        author = soup.find('span', class_="vcard author").find('span', class_="fn").get_text(strip=True)
         articles['author'] = html.unescape(author)
 
         #extract title
-        title = soup.find('h1', class_="entry-title").text
+        title = soup.find('h1', class_="entry-title").get_text(strip=True)
         articles['title'] = html.unescape(title)
 
         #source
         articles['source'] = 'otomart.com'
 
         #extract comments count
-        articles['comments'] = int(soup.find('span', class_="postcommentscount").text.strip(' \t\n\r'))
+        articles['comments'] = int(soup.find('span', class_="postcommentscount").get_text(strip=True).strip(' \t\n\r'))
 
         #extract tags
         tags = soup.findAll('meta', attrs={'property':'article:tag'})
@@ -141,7 +141,7 @@ class Otomart:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = html.unescape(content)
         #print('memasukkan berita id ', articles['id'])
 
@@ -151,7 +151,8 @@ class Otomart:
         """
         Untuk memasukkan berita ke DB
         """
-        print(articles)
+        print("Insert berita ", articles['title'])
+
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)

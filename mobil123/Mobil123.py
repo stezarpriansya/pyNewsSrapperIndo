@@ -33,7 +33,7 @@ class Mobil123:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(5)
-            details = self.getAllBerita(details, page+1, date)
+            details = self.getAllBerita(details, page, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -60,7 +60,7 @@ class Mobil123:
             el_page = soup.find('ul', class_="pagination")
             if el_page:
                 last_page = int(el_page.findAll('a')[-1]['data-page'])
-                # active_page = int(el_page.find('li', class_="active").text)
+                # active_page = int(el_page.find('li', class_="active").get_text(strip=True))
 
                 if page <= last_page:
                     time.sleep(5)
@@ -87,7 +87,7 @@ class Mobil123:
         if not bc:
             return False
 
-        sub = bc.findAll('a')[0].text
+        sub = bc.findAll('a')[0].get_text(strip=True)
         if ("foto" in sub.lower()) or  "video" in sub.lower():
             return False
 
@@ -102,7 +102,7 @@ class Mobil123:
         article = soup.find('div', class_="article__story-more")
 
         #extract date
-        pubdate = soup.find('div', class_="article__meta").find('span', attrs={"itemprop":"datePublished"}).text
+        pubdate = soup.find('div', class_="article__meta").find('span', attrs={"itemprop":"datePublished"}).get_text(strip=True)
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d %B %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
 
@@ -114,7 +114,7 @@ class Mobil123:
         articles['author'] = author
 
         #extract title
-        title = soup.find('h1', class_="article__title push-quarter--bottom").text
+        title = soup.find('h1', class_="article__title push-quarter--bottom").get_text(strip=True)
         articles['title'] = title
 
         #source
@@ -140,7 +140,7 @@ class Mobil123:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 

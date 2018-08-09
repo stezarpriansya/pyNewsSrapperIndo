@@ -36,7 +36,7 @@ class Otosia:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat, date)
+            details = self.getAllBerita(details, page, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -57,14 +57,13 @@ class Otosia:
             else:
                 detail = self.getDetailBerita(link)
                 if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
                     details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="simple-pagination__container")
             if el_page:
-                last_page = el_page.findAll('a')[-2].text
-                active_page = el_page.find('span', class_="mpnolink").text
+                last_page = el_page.findAll('a')[-2].get_text(strip=True)
+                active_page = el_page.find('span', class_="mpnolink").get_text(strip=True)
 
                 if last_page > active_page:
                     time.sleep(10)
@@ -91,7 +90,7 @@ class Otosia:
         if not bc:
             return False
 
-        sub = bc.findAll('a')[-1].text
+        sub = bc.findAll('a')[-1].get_text(strip=True)
         if ("foto" in sub.lower()) or  "video" in sub.lower():
             return False
 
@@ -106,7 +105,7 @@ class Otosia:
         article = soup.find('div', class_="OtoDetailNews")
 
         #extract date
-        pubdate = soup.find('span', class_="newsdetail-schedule").text
+        pubdate = soup.find('span', class_="newsdetail-schedule").get_text(strip=True)
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate']=datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
         articles['pubdate']
@@ -115,13 +114,13 @@ class Otosia:
         articles['id'] = int(datetime.strptime(pubdate, "%A, %d %B %Y %H:%M").timestamp()) + len(url)
 
         #extract editor
-        author = soup.findAll('span', class_="newsdetail-schedule")[1].text
+        author = soup.findAll('span', class_="newsdetail-schedule")[1].get_text(strip=True)
         author = author.replace('Editor : ',"")
         author = author.strip(' ')
         articles['author'] = author
 
         #extract title
-        title = soup.find('h1', class_="OtoDetailT").text
+        title = soup.find('h1', class_="OtoDetailT").get_text(strip=True)
         articles['title'] = title
 
         #source
@@ -132,7 +131,7 @@ class Otosia:
 
         #extract tags
         tags = soup.find('div', class_='detags').findAll('a')
-        tags = ','.join([x.text for x in tags])
+        tags = ','.join([x.get_text(strip=True) for x in tags])
         articles['tags'] = tags
 
         #extract images
@@ -148,7 +147,7 @@ class Otosia:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         content = content.replace('\xa0', '')
         articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
@@ -159,6 +158,7 @@ class Otosia:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

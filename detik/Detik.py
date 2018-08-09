@@ -32,7 +32,7 @@ class Detik:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat_link, category, date)
+            details = self.getAllBerita(details, page, cat_link, category, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -43,12 +43,11 @@ class Detik:
             link = [post.find('a', href=True)['href'], category]
             detail = self.getDetailBerita(link)
             if self.insertDB(con, detail):
-                print("Insert berita ", detail['title'])
                 details.append(detail)
 
         el_page = soup.find('div', class_="paging paging2")
         if el_page:
-            max_page = int(soup.find('div', class_="paging paging2").findAll('a')[-2].text.replace('\n', '').strip(' '))
+            max_page = int(soup.find('div', class_="paging paging2").findAll('a')[-2].get_text(strip=True).replace('\n', '').strip(' '))
 
             if page < max_page:
                 time.sleep(10)
@@ -74,7 +73,7 @@ class Detik:
         if not bc:
             return False
 
-        sub = bc.findAll('a')[1].text
+        sub = bc.findAll('a')[1].get_text(strip=True)
         if ("foto" in sub.lower()) or  "video" in sub.lower():
             return False
 
@@ -96,17 +95,17 @@ class Detik:
         articles['author'] = soup.find("meta", attrs={'name':'author'})['content']
 
         #extract title
-        articles['title'] = article.find('div', class_="jdl").find('h1').text
+        articles['title'] = article.find('div', class_="jdl").find('h1').get_text(strip=True)
 
         #source
         articles['source'] = 'detik'
 
         #extract comments count
-        articles['comments'] = int(soup.find('a', class_="komentar").find('span').text.replace('Komentar', '').strip(' \t\n\r'))
+        articles['comments'] = int(soup.find('a', class_="komentar").find('span').get_text(strip=True).replace('Komentar', '').strip(' \t\n\r'))
 
         #extract tags
         tags = article.find('div', class_="detail_tag").findAll('a')
-        articles['tags'] = ','.join([x.text for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
 
         #extract images
         articles['images'] = article.find('div', class_="pic_artikel").find('img')['src']
@@ -131,12 +130,12 @@ class Detik:
             script.decompose()
 
         for p in detail.findAll('p'):
-           if ("baca juga" in p.text.lower()) and (p.find('a')):
+           if ("baca juga" in p.get_text(strip=True).lower()) and (p.find('a')):
                p.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = re.sub(r'(Tonton juga).*','', content)
         print('memasukkan berita id ', articles['id'])
 
@@ -146,6 +145,7 @@ class Detik:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

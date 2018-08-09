@@ -32,7 +32,7 @@ class Rajamobil:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat, date)
+            details = self.getAllBerita(details, page, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -53,13 +53,12 @@ class Rajamobil:
             else:
                 detail = self.getDetailBerita(link)
                 if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
                     details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="page-nav td-pb-padding-side")
             if el_page:
-                max_page = int(el_page.find('a', class_="last").text.strip(' '))
+                max_page = int(el_page.find('a', class_="last").get_text(strip=True).strip(' '))
                 # max_page = 3
                 if page < max_page:
                     time.sleep(10)
@@ -95,10 +94,10 @@ class Rajamobil:
         articles['id'] = soup.find('input', {'id':'comment_post_ID'}).get('value')
 
         #extract author
-        articles['author'] = article.find('span', {'class': 'blue-clr text-right full-width display-ib'}).text
+        articles['author'] = article.find('span', {'class': 'blue-clr text-right full-width display-ib'}).get_text(strip=True)
 
         #extract title
-        articles['title'] = soup.find('div', {'class': 'td-author-by'}).find('a').text.strip(' \t\n\r')
+        articles['title'] = soup.find('div', {'class': 'td-author-by'}).find('a').get_text(strip=True).strip(' \t\n\r')
 
         #source
         articles['source'] = 'rajamobil'
@@ -135,12 +134,12 @@ class Rajamobil:
         #hapus linksisip
         for ls in detail.findAll('ul'):
             if ls.find('em'):
-                if 'baca' in ls.find('em').text.lower():
+                if 'baca' in ls.find('em').get_text(strip=True).lower():
                     ls.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
@@ -150,6 +149,7 @@ class Rajamobil:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

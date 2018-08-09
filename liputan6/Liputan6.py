@@ -28,7 +28,7 @@ class Liputan6:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat_link, category, date)
+            details = self.getAllBerita(details, page, cat_link, category, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -40,7 +40,6 @@ class Liputan6:
                 link = [post.find('a', href=True)['href'], category]
                 detail = self.getDetailBerita(link)
                 if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
                     details.append(detail)
 
         el_page = soup.find('div', class_="simple-pagination__container")
@@ -80,8 +79,8 @@ class Liputan6:
         bc = soup.find('ul', class_="read-page--breadcrumb")
         if not bc:
             return False
-        cat = bc.findAll('a')[-2].text
-        sub = bc.findAll('a')[-1].text
+        cat = bc.findAll('a')[-2].get_text(strip=True)
+        sub = bc.findAll('a')[-1].get_text(strip=True)
         if ("foto" in sub.lower()) or  "video" in sub.lower():
             return False
 
@@ -103,11 +102,11 @@ class Liputan6:
         articles['pubdate'] = pubdate
 
         #extract author
-        author = soup.find('a', class_="read-page--header--author__link url fn").find('span', class_="read-page--header--author__name fn").text
+        author = soup.find('a', class_="read-page--header--author__link url fn").find('span', class_="read-page--header--author__name fn").get_text(strip=True)
         articles['author'] = author
 
         #extract title
-        title = soup.find('header', class_="read-page--header").find('h1').text
+        title = soup.find('header', class_="read-page--header").find('h1').get_text(strip=True)
         articles['title'] = title
 
         #source
@@ -115,12 +114,12 @@ class Liputan6:
 
         #extract comments count
         comments = soup.find('li', class_="read-page--social-share__list-item js-social-share-comment").find('a')
-        comments = int(comments.find('span', class_="read-page--social-share__comment-total").text)
+        comments = int(comments.find('span', class_="read-page--social-share__comment-total").get_text(strip=True))
         articles['comments'] = comments
 
         #extract tags
         tags = soup.findAll('span', class_="tags--snippet__name")
-        tags = ','.join([x.text for x in tags])
+        tags = ','.join([x.get_text(strip=True) for x in tags])
         articles['tags'] = tags
 
         #extract images
@@ -146,7 +145,7 @@ class Liputan6:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content']
         #print('memasukkan berita id ', articles['id'])
 
@@ -156,6 +155,7 @@ class Liputan6:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

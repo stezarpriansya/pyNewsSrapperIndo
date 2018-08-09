@@ -32,7 +32,7 @@ class Kompas:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat_link, category, date)
+            details = self.getAllBerita(details, page, cat_link, category, date)
 
         # Extract HTML texts contained in Response object: html
         html = response.text
@@ -43,7 +43,6 @@ class Kompas:
             link = [post.find('a', href=True)['href'], category]
             detail = self.getDetailBerita(link)
             if self.insertDB(con, detail):
-                print("Insert berita ", detail['title'])
                 details.append(detail)
 
         el_page =  soup.find('div', class_="paging__wrap clearfix")
@@ -80,7 +79,7 @@ class Kompas:
 
         #extract subcategory from breadcrumb
         bc = soup.find('ul', class_="breadcrumb__wrap")
-        articles['subcategory'] = bc.findAll('li')[2].text
+        articles['subcategory'] = bc.findAll('li')[2].get_text(strip=True)
 
         #article
         article = soup.find("div", class_="read__content")
@@ -91,10 +90,10 @@ class Kompas:
         articles['pubdate']=datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
 
         #extract author
-        articles['author'] = soup.find('div', class_="read__author").text
+        articles['author'] = soup.find('div', class_="read__author").get_text(strip=True)
 
         #extract title
-        articles['title'] = soup.find('h1', class_="read__title").text
+        articles['title'] = soup.find('h1', class_="read__title").get_text(strip=True)
 
         #source
         articles['source'] = 'kompas'
@@ -112,7 +111,7 @@ class Kompas:
         # soup = BeautifulSoup(html, 'html5lib')
         #
         # comment = soup.find('div', class_="span4 comments-count tright")
-        # comment_num = comment.text.replace('Ada ', '')
+        # comment_num = comment.get_text(strip=True).replace('Ada ', '')
         # comment_num = comment_num.replace(' komentar untuk artikel ini', '')
         articles['comments'] = 0
 
@@ -129,7 +128,7 @@ class Kompas:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 
@@ -139,6 +138,7 @@ class Kompas:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

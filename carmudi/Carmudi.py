@@ -29,7 +29,7 @@ class Carmudi:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1)
+            details = self.getAllBerita(details, page)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -40,12 +40,12 @@ class Carmudi:
             link = [post.find('a', href=True)['href'], ""]
             detail = self.getDetailBerita(link)
             if self.insertDB(con, detail):
-                print("Insert berita ", detail['title'])
+
                 details.append(detail)
 
         el_page = soup.find('div', class_="vw-page-navigation-pagination")
         if el_page:
-            max_page = int(el_page.findAll('a')[-2].text.replace('\n', '').strip(' '))
+            max_page = int(el_page.findAll('a')[-2].get_text(strip=True).replace('\n', '').strip(' '))
 
             if page < max_page:
                 time.sleep(10)
@@ -72,10 +72,10 @@ class Carmudi:
             return False
 
         if len(bc.findAll('a')) > 2 :
-            cat = bc.findAll('a')[1].text
-            sub = bc.findAll('a')[2].text
+            cat = bc.findAll('a')[1].get_text(strip=True)
+            sub = bc.findAll('a')[2].get_text(strip=True)
         else:
-            cat = bc.findAll('a')[1].text
+            cat = bc.findAll('a')[1].get_text(strip=True)
             sub = ''
 
         articles['subcategory'] = sub
@@ -94,10 +94,10 @@ class Carmudi:
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
 
         #extract author
-        articles['author'] = article.find("a", class_="author-name").text
+        articles['author'] = article.find("a", class_="author-name").get_text(strip=True)
 
         #extract title
-        articles['title'] = article.find('h1', class_="entry-title").text
+        articles['title'] = article.find('h1', class_="entry-title").get_text(strip=True)
 
         #source
         articles['source'] = 'carmudi'
@@ -107,7 +107,7 @@ class Carmudi:
 
         #extract tags
         tags = article.find('div', class_="vw-tag-links").findAll('a')
-        articles['tags'] = ','.join([x.text for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
 
         #extract images
         articles['images'] = soup.find('meta', attrs={'property':'og:image'})['content']
@@ -128,11 +128,11 @@ class Carmudi:
             script.decompose()
 
         for p in detail.findAll('p'):
-           if ("baca juga" in p.text.lower()) and (p.find('a')):
+           if ("baca juga" in p.get_text(strip=True).lower()) and (p.find('a')):
                p.decompose()
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
@@ -142,7 +142,7 @@ class Carmudi:
         """
         Untuk memasukkan berita ke DB
         """
-
+        print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)

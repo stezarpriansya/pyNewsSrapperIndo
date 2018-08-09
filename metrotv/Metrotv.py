@@ -28,7 +28,7 @@ class Metrotv:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, offset+30, cat_link, category, date)
+            details = self.getAllBerita(details, page, offset+30, cat_link, category, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -39,7 +39,6 @@ class Metrotv:
             link = [post.find('a',href=True)['href']]
             detail = self.getDetailBerita(link)
             if self.insertDB(con, detail):
-                print("Insert berita ", detail['title'])
                 details.append(detail)
 
         el_page = soup.find('div', class_="grid")
@@ -69,8 +68,8 @@ class Metrotv:
         bc = soup.find('div', class_="breadcrumbs")
         if not bc:
             return False
-        cat = bc.findAll('a')[-2].text
-        sub = bc.findAll('a')[-1].text
+        cat = bc.findAll('a')[-2].get_text(strip=True)
+        sub = bc.findAll('a')[-1].get_text(strip=True)
 
         #articles
         article_id = int(soup.find('meta', attrs={"property":"og:image"})['content'].replace('//','').split('/')[6])
@@ -86,7 +85,7 @@ class Metrotv:
         article = soup.find('div', class_="tru")
 
         #extract date
-        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[0].text)
+        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[0].get_text(strip=True))
         pubdate_author = scripts['datePublished']
         # pubdate_author_split = pubdate_author.split(' \xa0\xa0 • \xa0\xa0 ')
         # pubdate = pubdate_author_split[1]
@@ -112,7 +111,7 @@ class Metrotv:
 
         #extract tags
         tags = soup.find('div', class_="line").findAll('a', class_="tag")
-        articles['tags'] = ','.join([x.text for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
 
         #extract images
         articles['images'] = soup.find('img', class_="pic")['src']
@@ -138,7 +137,7 @@ class Metrotv:
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content.strip(' ')
         #print('memasukkan berita id ', articles['id'])
 
@@ -148,6 +147,7 @@ class Metrotv:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

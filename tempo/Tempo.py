@@ -43,7 +43,7 @@ class Tempo:
                 link = [post.find('a', {'class':'col'}, href=True)['href'], ""]
                 detail = self.getDetailBerita(link)
                 if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
+                    print("Insert berita ", articles['title'])
                     details.append(detail)
     #         links = getIndeksLink(links, date)
         con.close()
@@ -66,8 +66,8 @@ class Tempo:
         #extract scrip json ld
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
 #         print(len(scripts_all))
-        scripts = json.loads(scripts_all[0].text)
-        scripts2 = json.loads(scripts_all[1].text)
+        scripts = json.loads(scripts_all[0].get_text(strip=True))
+        scripts2 = json.loads(scripts_all[1].get_text(strip=True))
 
         #category
         articles['category'] = scripts2['itemListElement'][-2]['item']['name']
@@ -93,12 +93,12 @@ class Tempo:
         articles['source'] = 'tempo'
 
         #extract comments count
-#         articles['comments'] = int(soup.find('span', class_="commentWidget-total").find('b').text.strip(' \t\n\r'))
+#         articles['comments'] = int(soup.find('span', class_="commentWidget-total").find('b').get_text(strip=True).strip(' \t\n\r'))
         articles['comments'] = 0
 
         #extract tags
         tags = article.find('div', class_="tags clearfix").findAll('a')
-        articles['tags'] = ','.join([x.text for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
 
         #extract images
         articles['images'] = scripts['image']['url']
@@ -114,12 +114,12 @@ class Tempo:
         #hapus link sisip
         if detail.findAll('p'):
             for p in detail.findAll('p'):
-                if ("baca:" in p.text.lower()):
+                if ("baca:" in p.get_text(strip=True).lower()):
                     p.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
@@ -129,6 +129,7 @@ class Tempo:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

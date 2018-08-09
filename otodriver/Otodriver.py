@@ -53,13 +53,12 @@ class Otodriver:
             # else:
             detail = self.getDetailBerita(link)
             if self.insertDB(con, detail):
-                print("Insert berita ", detail['title'])
                 details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
             if el_page:
-                last_page = int(el_page.findAll('li')[-2].text.replace('\n', '').strip(' '))
+                last_page = int(el_page.findAll('li')[-2].get_text(strip=True).replace('\n', '').strip(' '))
                 # last_page = 2
                 if last_page != page:
                     time.sleep(5)
@@ -108,7 +107,7 @@ class Otodriver:
 
         #extract tags
         tags = article.find('div', class_="post-meta").findAll('a')
-        articles['tags'] = ','.join([x.text.replace('#', '') for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags])
 
         #extract images
         articles['images'] = soup.find("meta", attrs={'property':'twitter:image'})['content']
@@ -131,12 +130,12 @@ class Otodriver:
         #hapus linksisip
         for ls in detail.findAll('a'):
             if ls.find('strong'):
-                if 'baca' in ls.find('strong').text.lower():
+                if 'baca' in ls.find('strong').get_text(strip=True).lower():
                     ls.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",unicodedata.normalize("NFKD",detail.text)))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",unicodedata.normalize("NFKD",detail.get_text(strip=True))))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
@@ -146,6 +145,7 @@ class Otodriver:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

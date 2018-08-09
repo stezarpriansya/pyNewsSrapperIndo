@@ -57,7 +57,7 @@ class Seva:
 
         el_page = soup.find('nav', attrs={'aria-label':'Page navigation example'})
         if el_page:
-            max_page = int(soup.find('ul', class_="pagination").findAll('li')[-2].find('a').text.replace('\n', '').strip(' '))
+            max_page = int(soup.find('ul', class_="pagination").findAll('li')[-2].find('a').get_text(strip=True).replace('\n', '').strip(' '))
 
             if page < max_page:
                 time.sleep(10)
@@ -98,10 +98,10 @@ class Seva:
 
         #extract author
         author = soup.find("div", class_="col-md-8").find('div', class_='col-md-10')
-        articles['author'] = author.find('div', class_="details").text if author else ''
+        articles['author'] = author.find('div', class_="details").get_text(strip=True) if author else ''
 
         #extract title
-        articles['title'] = article.find('div', class_="title").find('h1').text
+        articles['title'] = article.find('div', class_="title").find('h1').get_text(strip=True)
 
         #source
         articles['source'] = 'seva'
@@ -122,7 +122,7 @@ class Seva:
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = html.unescape(content)
         print('memasukkan berita id ', articles['id'])
 

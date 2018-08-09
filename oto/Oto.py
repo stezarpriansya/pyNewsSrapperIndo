@@ -33,7 +33,7 @@ class Oto:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat, date)
+            details = self.getAllBerita(details, page, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -56,7 +56,7 @@ class Oto:
             if self.insertDB(con, detail):
                 details.append(detail)
         if flag:
-            max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').text))/12)
+            max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').get_text(strip=True)))/12)
             # max_page = 2
             if page <= max_page:
                 time.sleep(10)
@@ -82,7 +82,7 @@ class Oto:
         if not bc:
             return False
 
-        sub = bc.findAll('li')[-2].text
+        sub = bc.findAll('li')[-2].get_text(strip=True)
 
         if ("foto" in sub.lower()) or  "video" in sub.lower():
             return False
@@ -98,7 +98,7 @@ class Oto:
         article = soup.find('div', class_="content")
 
         #extract date
-        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[-1].text)
+        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[-1].get_text(strip=True))
         pubdate = scripts['datePublished']
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
@@ -110,11 +110,11 @@ class Oto:
         articles['id'] = articleid
 
         #extract editor
-        author = soup.find('div', class_="publish-cont").find('a').text
+        author = soup.find('div', class_="publish-cont").find('a').get_text(strip=True)
         articles['author'] = author
 
         #extract title
-        title = soup.find('article', class_="newslistouter container-base").find('h1').text
+        title = soup.find('article', class_="newslistouter container-base").find('h1').get_text(strip=True)
         articles['title'] = title
 
         #source
@@ -139,16 +139,16 @@ class Oto:
             div.decompose()
 
         for src in detail.findAll('p'):
-            if ("sumber:" in src.text.lower()):
+            if ("sumber:" in src.get_text(strip=True).lower()):
                 src.decompose()
 
         for p in detail.findAll('p'):
-            if ("baca juga" in p.text.lower()) and (p.find('a')):
+            if ("baca juga" in p.get_text(strip=True).lower()) and (p.find('a')):
                 p.decompose()
         # print(detail)
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         # print(content)
         articles['content'] = content
         #print('memasukkan berita id ', articles['id'])

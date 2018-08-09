@@ -28,7 +28,7 @@ class Sindonews:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat_link, offset+10, date)
+            details = self.getAllBerita(details, page, cat_link, offset+10, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -40,7 +40,6 @@ class Sindonews:
                 link = [post.find('a', href=True)['href'], ""]
                 detail = self.getDetailBerita(link)
                 if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
                     details.append(detail)
 
         el_page = soup.find('div', class_="pagination")
@@ -69,8 +68,8 @@ class Sindonews:
         bc = soup.find('ul', class_="breadcrumb")
         if not bc:
             return False
-        cat = bc.findAll('a')[-2].text
-        sub = bc.findAll('a')[-1].text
+        cat = bc.findAll('a')[-2].get_text(strip=True)
+        sub = bc.findAll('a')[-1].get_text(strip=True)
 
         #articleid
         url_split = url.replace('//','').split('/')
@@ -88,18 +87,18 @@ class Sindonews:
         article = soup.find("div", id="content")
 
         #extract date
-        pubdate = soup.find('time').text
+        pubdate = soup.find('time').get_text(strip=True)
         pubdate = pubdate.strip(' \t\n\r')
         pubdate = pubdate.replace(' WIB','')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y - %H:%M"), "%Y-%m-%d %H:%M:%S")
 
         #extract author
         reporter = soup.find('div', class_="reporter")
-        author = reporter.find('p', class_="author").find('a').text.strip(' ')
+        author = reporter.find('p', class_="author").find('a').get_text(strip=True).strip(' ')
         articles['author'] = author
 
         #extract title
-        title = soup.find('div', class_="article").find('h1').text
+        title = soup.find('div', class_="article").find('h1').get_text(strip=True)
         if ("foto" in title.lower()) or  "video" in title.lower():
             return False
         articles['title'] = title
@@ -112,7 +111,7 @@ class Sindonews:
 
         #extract tags
         #tags = soup.findAll('span', class_="tags--snippet__name")
-        #tags = ','.join([x.text for x in tags])
+        #tags = ','.join([x.get_text(strip=True) for x in tags])
         #articles['tags'] = tags
 
         #extract images
@@ -125,7 +124,7 @@ class Sindonews:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
 
         #articles['content'] = re.sub('google*','', content).strip(' ')
         articles['content'] = content
@@ -137,6 +136,7 @@ class Sindonews:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

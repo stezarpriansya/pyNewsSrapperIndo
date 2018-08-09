@@ -30,7 +30,7 @@ class Tirto:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, date)
+            details = self.getAllBerita(details, page, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -38,7 +38,7 @@ class Tirto:
 
         main_el = soup.find('div', attrs={'id':'__nuxt'})
         script = main_el.findNextSiblings()
-        tes = script[0].text.replace('window.__NUXT__=', '')[:-1]
+        tes = script[0].get_text(strip=True).replace('window.__NUXT__=', '')[:-1]
         json_mobil = json.loads(tes)
 
         link_articles = json_mobil['data'][0]['listarticle']
@@ -47,12 +47,11 @@ class Tirto:
                 link = ['https://tirto.id'+art['articleUrl'], '']
                 detail = self.getDetailBerita(link)
                 if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
                     details.append(detail)
 
         el_page = soup.find('ul', class_="custom-pagination p-0 text-center mb-5 col-10 offset-1")
         if el_page:
-            max_page = int(el_page.findAll('a')[-2].text)
+            max_page = int(el_page.findAll('a')[-2].get_text(strip=True))
 
             if page < max_page:
                 time.sleep(10)
@@ -74,8 +73,8 @@ class Tirto:
         bc = soup.find('ol', class_="breadcrumbs")
         if not bc:
             return False
-        cat = bc.findAll('a')[-1].text
-        #sub = bc.findAll('a')[-1].text
+        cat = bc.findAll('a')[-1].get_text(strip=True)
+        #sub = bc.findAll('a')[-1].get_text(strip=True)
 
         #category
         articles['category'] = cat
@@ -90,7 +89,7 @@ class Tirto:
         author = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[2]
 
         #extract date
-        author_pubdate = soup.find('div', class_="col-md-6").text.replace('Oleh: ','')
+        author_pubdate = soup.find('div', class_="col-md-6").get_text(strip=True).replace('Oleh: ','')
         author_pubdate = author_pubdate.split(' - ')
         pubdate = author_pubdate[1]
         pubdate = pubdate.strip(' ')
@@ -99,13 +98,13 @@ class Tirto:
         articles['id'] = int(datetime.strptime(pubdate, "%d %B %Y").timestamp()) + len(url)
         #extract author
         credit = soup.find('div', class_="credit").findAll('span', class_="reporter-grup")
-        reporter_sumber = credit[0].text.replace('Reporter: ','')
-        author = credit[1].text.replace('Penulis: ','')
-        editor = credit[2].text.replace('Editor: ','')
+        reporter_sumber = credit[0].get_text(strip=True).replace('Reporter: ','')
+        author = credit[1].get_text(strip=True).replace('Penulis: ','')
+        editor = credit[2].get_text(strip=True).replace('Editor: ','')
         articles['author'] = author
 
         #extract title
-        title = soup.find('h1', class_="news-detail-title text-center animated zoomInUp my-3").text
+        title = soup.find('h1', class_="news-detail-title text-center animated zoomInUp my-3").get_text(strip=True)
         if ("foto" in title.lower()) or  "video" in title.lower():
             return False
         articles['title'] = title
@@ -130,7 +129,7 @@ class Tirto:
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
 
         #articles['content'] = re.sub('google*','', content).strip(' ')
         articles['content'] = content
@@ -142,6 +141,7 @@ class Tirto:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

@@ -30,7 +30,7 @@ class Idntimes:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, cat_link, page+1, date)
+            details = self.getAllBerita(details, cat_link, page, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -42,7 +42,6 @@ class Idntimes:
                 link = [post.find('a', href=True)['href'], cat_link]
                 detail = self.getDetailBerita(link)
                 if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
                     details.append(detail)
             time.sleep(10)
             details = self.getAllBerita(details, cat_link, page+1, date)
@@ -66,8 +65,8 @@ class Idntimes:
         #extract scrip json ld
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
 #         print(len(scripts_all))
-        scripts = json.loads(scripts_all[-2].text)
-        scripts2 = json.loads(scripts_all[-1].text)
+        scripts = json.loads(scripts_all[-2].get_text(strip=True))
+        scripts2 = json.loads(scripts_all[-1].get_text(strip=True))
 
         #category
         articles['category'] = scripts2['itemListElement'][0]['item']['name']
@@ -93,12 +92,12 @@ class Idntimes:
         articles['source'] = 'idntimes'
 
         #extract comments count
-#         articles['comments'] = int(soup.find('span', class_="commentWidget-total").find('b').text.strip(' \t\n\r'))
+#         articles['comments'] = int(soup.find('span', class_="commentWidget-total").find('b').get_text(strip=True).strip(' \t\n\r'))
         articles['comments'] = 0
 
         #extract tags
         tags = article.find('div', class_="content-post-topic").findAll('a')
-        articles['tags'] = ','.join([x.text for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
 
         #extract images
         articles['images'] = scripts['image']['url']
@@ -114,12 +113,12 @@ class Idntimes:
         #hapus link sisip
         if detail.findAll('strong'):
             for b in detail.findAll('strong'):
-                if ("baca juga" in b.text.lower()):
+                if ("baca juga" in b.get_text(strip=True).lower()):
                     b.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
@@ -129,6 +128,7 @@ class Idntimes:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

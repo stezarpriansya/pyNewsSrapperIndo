@@ -32,7 +32,7 @@ class Otorider:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat, date)
+            details = self.getAllBerita(details, page, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -54,7 +54,6 @@ class Otorider:
             # else:
             detail = self.getDetailBerita(link)
             if self.insertDB(con, detail):
-                print("Insert berita ", detail['title'])
                 details.append(detail)
             max_page = -1
                 # max_page = 3
@@ -114,7 +113,7 @@ class Otorider:
 
         #extract tags
         tags = article.find('div', class_="post-meta").findAll('a')
-        articles['tags'] = ','.join([x.text.replace('#', '') for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags])
 
         #extract images
         articles['images'] = soup.find("meta", attrs={'property':'twitter:image'})['content']
@@ -137,12 +136,12 @@ class Otorider:
         #hapus linksisip
         for ls in detail.findAll('a'):
             if ls.find('strong'):
-                if 'baca' in ls.find('strong').text.lower():
+                if 'baca' in ls.find('strong').get_text(strip=True).lower():
                     ls.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
-        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
+        content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
         print('memasukkan berita id ', articles['id'])
 
@@ -152,6 +151,7 @@ class Otorider:
         """
         Untuk memasukkan berita ke DB
         """
+        print("Insert berita ", articles['title'])
 
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
