@@ -47,15 +47,16 @@ class Otorider:
             cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
-            if (link[0] in [x[0] for x in links]) or (result[0] > 0):
-                max_page = page
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
-                    details.append(detail)
-                max_page = -1
+            #comment sementara
+            # if (link[0] in [x[0]['url'] for x in details]) or (result[0] > 0):
+            #     max_page = page
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if self.insertDB(con, detail):
+                print("Insert berita ", detail['title'])
+                details.append(detail)
+            max_page = -1
                 # max_page = 3
 
         if page != max_page:
@@ -78,15 +79,16 @@ class Otorider:
         soup = BeautifulSoup(html, "html5lib")
 
         #category
+        subcat = ''
         if link[1] == 1:
-            cat = 'Tips Modifikasi'
+            subcat = 'Tips Modifikasi'
         elif cat == 12:
-            cat = 'Berita'
+            subcat = 'Berita'
         else:
-            cat = 'Komunitas'
+            subcat = 'Komunitas'
 
         articles['category'] = 'Otomotif'
-        articles['subcategory'] = cat
+        articles['subcategory'] = subcat
 
         articles['url'] = url
 

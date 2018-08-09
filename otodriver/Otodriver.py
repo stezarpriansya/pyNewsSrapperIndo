@@ -32,7 +32,7 @@ class Otodriver:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat, date)
+            details = self.getAllBerita(details, page, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -47,14 +47,14 @@ class Otodriver:
             cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
-                    details.append(detail)
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if self.insertDB(con, detail):
+                print("Insert berita ", detail['title'])
+                details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
@@ -101,7 +101,7 @@ class Otodriver:
         articles['title'] = soup.find('meta', {'property': 'og:title'})['content']
 
         #source
-        articles['source'] = 'otorider'
+        articles['source'] = 'otodriver'
 
         #extract comments count
         articles['comments'] = 0

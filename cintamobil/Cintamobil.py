@@ -32,7 +32,7 @@ class Cintamobil:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat, date)
+            details = self.getAllBerita(details, page, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -47,14 +47,14 @@ class Cintamobil:
             cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
-                    details.append(detail)
+            #comment sementara
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if self.insertDB(con, detail):
+                details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="paging pull-right")
@@ -62,7 +62,7 @@ class Cintamobil:
                 max_page = int(el_page.findAll('li')[-1].find('a', href=True)['href'].split('/')[-1].replace('p', '').strip(' '))
                 # max_page = 3
                 if page < max_page:
-                    time.sleep(10)
+                    time.sleep(5)
                     details = self.getAllBerita(details, page+1, cat, date)
         con.close()
         return details
@@ -71,7 +71,7 @@ class Cintamobil:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
@@ -89,16 +89,19 @@ class Cintamobil:
         article = soup.find('div', class_="list-review w--100 pull-left")
 
         #extract date
-        pubdate = article.find('div', {'class':'pull-left w--100'}).text
+        # print(article)
+        pubdate = article.find('h1', {'class':'title fsize-20 fweight-bold mg-bottom-5'}).findNextSiblings()[0].find('span').text
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d/%m/%Y"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = soup.find('input', {'id':'ArticleId'}).get('value')
 
         #extract author
-        articles['author'] = article.find('span', {'class': 'blue-clr text-right full-width display-ib'}).text
+        author = article.find('span', {'class': 'blue-clr text-right full-width display-ib'})
+        articles['author'] = author.text if author else ''
 
         #extract title
-        articles['title'] = soup.find('meta', {'property': 'og:title'})['content']
+        title = soup.find('meta', {'property': 'og:title'})
+        articles['title'] = title['content'] if title else ''
 
         #source
         articles['source'] = 'cintamobil'
@@ -107,11 +110,12 @@ class Cintamobil:
         articles['comments'] = 0
 
         #extract tags
-        tags = article.find('div', class_="w--100 pull-left text-left mg-top-20").findAll('a')
-        articles['tags'] = ','.join([x.text for x in tags])
+        tags = article.find('div', class_="w--100 pull-left text-left mg-top-20")
+        articles['tags'] = ','.join([x.text for x in tags.findAll('a')]) if tags else ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
+        images = soup.find("meta", attrs={'property':'og:image'})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={'class':'w--100 pull-left set-relative detail-font'})
@@ -146,7 +150,7 @@ class Cintamobil:
         """
         Untuk memasukkan berita ke DB
         """
-
+        print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)

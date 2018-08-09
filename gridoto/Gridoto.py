@@ -24,8 +24,8 @@ class Gridoto:
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
-        date = datetime.strptime(date, '%Y/%m/%d')
-        url = "https://www.gridoto.com/index?day="+str(date.date().day)+"&month="+str(date.date().month)+"&year="+str(date.date().year)+"&section=all&page="+str(page)
+        date2 = datetime.strptime(date, '%Y/%m/%d')
+        url = "https://www.gridoto.com/index?day="+str(date2.date().day)+"&month="+str(date2.date().month)+"&year="+str(date2.date().year)+"&section=all&page="+str(page)
         print(url)
         # Make the request and create the response object: response
         try:
@@ -33,7 +33,7 @@ class Gridoto:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, date)
+            details = self.getAllBerita(details, page, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -49,20 +49,21 @@ class Gridoto:
             cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
-                    details.append(detail)
+            #comment sementara
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if self.insertDB(con, detail):
+                # print("Insert berita ", detail['title'])
+                details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination_number")
             if el_page:
-                last_page = int(el_page.findAll('li')[-1].text.replace('\n', '').strip(' '))
-                active_page = int(el_page.find('li', class_="active").text.replace('\n', '').strip(' '))
+                last_page = el_page.findAll('li')[-1].find('a')['data-ci-pagination-page'].replace('\n', '').strip(' ')
+                active_page = el_page.find('li', class_="active").text.replace('\n', '').strip(' ')
                 # last_page = 2
                 if last_page != active_page:
                     time.sleep(5)
@@ -80,11 +81,11 @@ class Gridoto:
         #link
         url = link[0]+'?page=all'
         response = requests.get(url)
-        html = response.text
+        html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
-        soup = BeautifulSoup(html, "html5lib")
-
-        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[-1].text)
+        soup = BeautifulSoup(html2, "html5lib")
+        print(url)
+        scripts = json.loads(html.unescape(soup.findAll('script', {'type':'application/ld+json'})[-1].text))
         #category
         articles['category'] = 'Otomotif'
         articles['subcategory'] = link[1]
@@ -151,7 +152,7 @@ class Gridoto:
         """
         Untuk memasukkan berita ke DB
         """
-
+        print(articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)

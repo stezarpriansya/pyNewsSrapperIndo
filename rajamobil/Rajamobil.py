@@ -89,7 +89,7 @@ class Rajamobil:
         article = soup.find('div', class_="td-pb-span8 td-main-content")
 
         #extract date
-        pubdate = article.find('meta', {'property':'article:published_time'})['content']
+        pubdate = soup.find('meta', {'property':'article:published_time'})['content']
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = soup.find('input', {'id':'comment_post_ID'}).get('value')

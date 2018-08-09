@@ -11,6 +11,7 @@ import html
 import time
 from requests.exceptions import ConnectionError
 import unicodedata
+import mysql.connector
 
 class Seva:
     def getAllBerita(self, details, page, cat_link, category):
@@ -18,9 +19,20 @@ class Seva:
         Untuk mengambil seluruh url
         link pada indeks category tertentu
         date format : dd/mm/YYYY
+        category: otomotif, properti
+        cat_link = Tips & Rekomendasi
+                    Review Otomotif
+                    Berita Terbaru
+                    Travel & Lifestyle
+                    Berita Otomotif
+                    Keuangan
+                    Hobi & Komunitas
+                    Modifikasi
+                    Editor's Pick
+                    tips-n-rekomendasi khusus untuk properti
         """
         print("page ", page)
-        url = "https://www.seva.id/otomotif/blog/category/"+cat_link+"/page/"+str(page)
+        url = "https://www.seva.id/"+category+"/blog/category/"+cat_link+"/page/"+str(page)
         print(url)
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         # Make the request and create the response object: response
@@ -29,18 +41,18 @@ class Seva:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page+1, cat_link, category)
+            details = self.getAllBerita(details, page, cat_link, category)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        contentDiv = soup.find('div', class_="col-md-6")
-        indeks = contentDiv.findAll('div', class_='article-box')
+        # contentDiv = soup.find('div', class_="col-md-6")
+        indeks = soup.findAll('div', class_='article-box')
         for post in indeks:
-            link = [post.find('a', href=True)['href'], category]
+            link = [post.find('a', href=True)['href'], cat_link, category]
             detail = self.getDetailBerita(link)
             if self.insertDB(con, detail):
-                print("Insert berita ", detail['title'])
+
                 details.append(detail)
 
         el_page = soup.find('nav', attrs={'aria-label':'Page navigation example'})
@@ -62,18 +74,18 @@ class Seva:
         #link
         url = link[0]
         response = requests.get(url)
-        html = response.text
+        html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
-        soup = BeautifulSoup(html, "html5lib")
+        soup = BeautifulSoup(html2, "html5lib")
 
         #extract subcategory from meta
         sub = html.unescape(soup.find('meta', attrs={'property': 'article:section'})['content'])
 
-        articles['subcategory'] = sub
+        articles['subcategory'] = link[1]
 
         articles['id'] = int(soup.find("link", attrs={'rel':'shortlink'})['href'].replace("https://www.seva.id/otomotif/?p=", "").strip(' \t\n\r'))
         #category
-        articles['category'] = link[1]
+        articles['category'] = link[2]
         articles['url'] = url
 
         article = soup.find('div', class_="news-content border-list")
@@ -85,7 +97,8 @@ class Seva:
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
 
         #extract author
-        articles['author'] = soup.find("div", class_="col-md-8").find('div', class_='col-md-10').find('div', class_="details").text
+        author = soup.find("div", class_="col-md-8").find('div', class_='col-md-10')
+        articles['author'] = author.find('div', class_="details").text if author else ''
 
         #extract title
         articles['title'] = article.find('div', class_="title").find('h1').text
@@ -119,7 +132,7 @@ class Seva:
         """
         Untuk memasukkan berita ke DB
         """
-
+        print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
