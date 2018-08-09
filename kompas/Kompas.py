@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.options import Options
 from requests.exceptions import ConnectionError
 import unicodedata
 import time
+import mysql.connector
 # from selenium import webdriver
 # from selenium.webdriver.support.wait import WebDriverWait
 # from selenium.webdriver.support import expected_conditions as EC

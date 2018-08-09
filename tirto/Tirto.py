@@ -12,6 +12,7 @@ import json
 import time
 from requests.exceptions import ConnectionError
 import unicodedata
+import mysql.connector
 
 class Tirto:
     def getAllBerita(self, details, page, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):

@@ -13,6 +13,7 @@ import json
 import time
 from requests.exceptions import ConnectionError
 import unicodedata
+import mysql.connector
 
 class Viva:
     def getLoadMorePost(self, con, links, driver, date):

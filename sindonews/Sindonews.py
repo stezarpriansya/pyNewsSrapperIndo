@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.options import Options
 import time
 from requests.exceptions import ConnectionError
 import unicodedata
+import mysql.connector
 
 class Sindonews:
     def getAllBerita(self, details, page, cat_link, offset=0, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):

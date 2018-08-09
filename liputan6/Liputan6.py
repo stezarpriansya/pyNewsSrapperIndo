@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.options import Options
 import time
 from requests.exceptions import ConnectionError
 import unicodedata
+import mysql.connector
 
 class Liputan6:
     def getAllBerita(self, details, page, cat_link, category, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
