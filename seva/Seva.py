@@ -83,7 +83,7 @@ class Seva:
 
         articles['subcategory'] = link[1]
 
-        articles['id'] = int(soup.find("link", attrs={'rel':'shortlink'})['href'].replace("https://www.seva.id/otomotif/?p=", "").strip(' \t\n\r'))
+        articles['id'] = int(soup.find("link", attrs={'rel':'shortlink'})['href'].replace("https://www.seva.id/"+link[2]+"/?p=", "").strip(' \t\n\r'))
         #category
         articles['category'] = link[2]
         articles['url'] = url
