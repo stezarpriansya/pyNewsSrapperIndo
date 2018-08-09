@@ -32,13 +32,13 @@ class Mobil123:
             response = requests.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
-            time.sleep(10)
+            time.sleep(5)
             details = self.getAllBerita(details, page+1, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        indeks = soup.findAll('article', class_="article")
+        indeks = soup.findAll('article', {'class':'article article--listing media push--bottom'})
         flag = True
         for post in indeks:
             link = [post.find('a', href=True)['href'], '']
@@ -48,24 +48,23 @@ class Mobil123:
             cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
-                    details.append(detail)
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if self.insertDB(con, detail):
+                details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
             if el_page:
-                last_page = el_page.findAll('a')[-3].text
-                active_page = el_page.find('li', class_="active").text
+                last_page = int(el_page.findAll('a')[-1]['data-page'])
+                # active_page = int(el_page.find('li', class_="active").text)
 
-                if last_page > active_page:
-                    time.sleep(10)
-                    details = self.getAllBerita(details, int(active_page)+1, date)
+                if page <= last_page:
+                    time.sleep(5)
+                    details = self.getAllBerita(details, page+1, date)
 
         con.close()
         return details
@@ -74,7 +73,7 @@ class Mobil123:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
@@ -130,7 +129,7 @@ class Mobil123:
 
         #extract images
         image = soup.find('div', attrs={"itemprop":"image"}).find('img')['data-src']
-        articles['image'] = image
+        articles['images'] = image
 
         #hapus link sisip
         for link in article.findAll('div'):
@@ -151,7 +150,7 @@ class Mobil123:
         """
         Untuk memasukkan berita ke DB
         """
-
+        print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
