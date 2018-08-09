@@ -13,6 +13,7 @@ import time
 from requests.exceptions import ConnectionError
 import unicodedata
 import mysql.connector
+import math
 
 class Oto:
     def getAllBerita(self, details, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
@@ -47,13 +48,13 @@ class Oto:
             cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if self.insertDB(detail):
-                    details.append(detail)
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if self.insertDB(con, detail):
+                details.append(detail)
         if flag:
             max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').text))/12)
             # max_page = 2
@@ -127,7 +128,7 @@ class Oto:
 
         #extract images
         image = article.find('img')['src']
-        articles['image'] = image
+        articles['images'] = image
 
         detail = article
         #hapus link sisip
@@ -158,7 +159,7 @@ class Oto:
         """
         Untuk memasukkan berita ke DB
         """
-
+        print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
