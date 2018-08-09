@@ -25,7 +25,7 @@ class Oto:
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
-        url = "https://www.oto.com/"+cat+"?page"+str(page)
+        url = "https://www.oto.com/"+cat+"?page="+str(page)
         print(url)
         # Make the request and create the response object: response
         try:
