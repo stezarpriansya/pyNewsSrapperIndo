@@ -114,7 +114,7 @@ class Mobil123:
         articles['author'] = author
 
         #extract title
-        title = soup.find('h1', class_="article__title").text
+        title = soup.find('h1', class_="article__title push-quarter--bottom").text
         articles['title'] = title
 
         #source

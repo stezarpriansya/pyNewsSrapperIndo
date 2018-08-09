@@ -11,6 +11,8 @@ import time
 from requests.exceptions import ConnectionError
 import unicodedata
 import mysql.connector
+from mysql.connector import Error
+import html
 
 class Otomart:
     def getAllBerita(self, details, page, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
@@ -30,8 +32,8 @@ class Otomart:
             response = requests.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
-            time.sleep(10)
-            details = self.getAllBerita(details, page+1, date)
+            time.sleep(5)
+            details = self.getAllBerita(details, page, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -42,28 +44,27 @@ class Otomart:
         for post in indeks:
             link = [post.find('a', href=True)['href'], '']
             #check if there are a post with same url
-            cursor = con.cursor()
-            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            cursor.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    print("Insert berita ", detail['title'])
-                    details.append(detail)
+            # cursor = con.cursor()
+            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            # cursor.execute(query)
+            # result = cursor.fetchone()
+            # cursor.close()
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if self.insertDB(con, detail):
+                details.append(detail)
         if flag:
-            el_page = el_page = soup.find('div', class_="wp-pagenavi")
+            el_page = soup.find('div', class_="wp-pagenavi")
             if el_page:
                 last_page = int(el_page.findAll('a', href=True)[-1]['href'].split('page/')[-1].replace('\n', '').strip(' '))
-                active_page = int(el_page.find('span', class_="current").text.replace('\n', '').strip(' '))
+                # active_page = int(el_page.find('span', class_="current").text.replace('\n', '').strip(' '))
 
-                if last_page > active_page:
-                    time.sleep(10)
-                    details = self.getAllBerita(details, int(active_page)+1,date)
+                if page <= last_page:
+                    time.sleep(5)
+                    details = self.getAllBerita(details, page+1,date)
 
         con.close()
         return details
@@ -72,24 +73,27 @@ class Otomart:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
         response = requests.get(url)
-        html = response.text
+        html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
-        soup = BeautifulSoup(html, "html5lib")
+        soup = BeautifulSoup(html2, "html5lib")
 
         #extract subcategory from breadcrumb
-        bc = soup.find('a', attrs={"rel":"category tag"}).text
+        bc = soup.find('a', attrs={'rel':'category tag'})
+        if not bc:
+            return False
 
-        if ("foto" in bc.lower()) or  "video" in bc.lower():
+        sub = bc.text
+        if ("foto" in sub.lower()) or  "video" in sub.lower():
             return False
 
         #category
         articles['category'] = 'Otomotif'
-        articles['subcategory'] = bc
+        articles['subcategory'] = html.unescape(sub)
 
         #article_url
         articles['url'] = url
@@ -107,11 +111,11 @@ class Otomart:
 
         #extract editor
         author = soup.find('span', class_="vcard author").find('span', class_="fn").text
-        articles['author'] = author
+        articles['author'] = html.unescape(author)
 
         #extract title
         title = soup.find('h1', class_="entry-title").text
-        articles['title'] = title
+        articles['title'] = html.unescape(title)
 
         #source
         articles['source'] = 'otomart.com'
@@ -120,15 +124,13 @@ class Otomart:
         articles['comments'] = int(soup.find('span', class_="postcommentscount").text.strip(' \t\n\r'))
 
         #extract tags
-        tags = soup.findAll('meta', attrs={"property":"article:tag"})
-        articles['tags'] = ','.join([x['content'] for x in tags])
+        tags = soup.findAll('meta', attrs={'property':'article:tag'})
+        tags = ','.join([x['content'] for x in tags])
+        articles['tags'] = html.unescape(tags)
 
         #extract images
         image = soup.find('meta', attrs={"property":"og:image:secure_url"})
-        if image:
-            articles['image'] = image['content']
-        else:
-            articles['image'] = ''
+        articles['images'] = image
 
         #hapus link sisip
         for link in article.findAll('figure'):
@@ -140,7 +142,7 @@ class Otomart:
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.text))
-        articles['content'] = content
+        articles['content'] = html.unescape(content)
         #print('memasukkan berita id ', articles['id'])
 
         return articles
@@ -149,7 +151,7 @@ class Otomart:
         """
         Untuk memasukkan berita ke DB
         """
-
+        print(articles)
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
