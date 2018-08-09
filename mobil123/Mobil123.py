@@ -115,10 +115,10 @@ class Mobil123:
 
         #extract title
         title = soup.find('h1', class_="article__title push-quarter--bottom").get_text(strip=True)
-        articles['title'] = title
+        articles['title'] = title if title else ''
 
         #source
-        articles['source'] = 'mobil123.com'
+        articles['source'] = 'mobil123'
 
         #extract comments count
         articles['comments'] = 0

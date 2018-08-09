@@ -35,15 +35,15 @@ class Otosia:
             response = requests.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
-            time.sleep(10)
+            time.sleep(5)
             details = self.getAllBerita(details, page, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('li', class_="artbox-text")
-        flag = False
-        for post in indeks[0:3]:
+        flag = True
+        for post in indeks:
             link = ["https://www.otosia.com"+ post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
             cursor = con.cursor()
@@ -51,23 +51,23 @@ class Otosia:
             cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    details.append(detail)
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if self.insertDB(con, detail):
+                details.append(detail)
 
         if flag:
-            el_page = soup.find('div', class_="simple-pagination__container")
+            el_page = soup.find('div', class_="mphold-g")
             if el_page:
-                last_page = el_page.findAll('a')[-2].get_text(strip=True)
-                active_page = el_page.find('span', class_="mpnolink").get_text(strip=True)
+                last_page = int(el_page.findAll('a')[-2].get_text(strip=True))
+                active_page = int(el_page.find('span', class_="mpnolink").get_text(strip=True))
 
-                if last_page > active_page:
-                    time.sleep(10)
-                    details = self.getAllBerita(details, int(active_page)+1, cat, date)
+                if active_page <= last_page:
+                    time.sleep(5)
+                    details = self.getAllBerita(details, active_page+1, cat, date)
 
         con.close()
         return details
@@ -76,7 +76,7 @@ class Otosia:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
@@ -107,6 +107,7 @@ class Otosia:
         #extract date
         pubdate = soup.find('span', class_="newsdetail-schedule").get_text(strip=True)
         pubdate = pubdate.strip(' \t\n\r')
+        pubdate = pubdate.replace("'", "")
         articles['pubdate']=datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
         articles['pubdate']
 
@@ -124,19 +125,18 @@ class Otosia:
         articles['title'] = title
 
         #source
-        articles['source'] = 'otosia.com'
+        articles['source'] = 'otosia'
 
         #extract comments count
         articles['comments'] = 0
 
         #extract tags
-        tags = soup.find('div', class_='detags').findAll('a')
-        tags = ','.join([x.get_text(strip=True) for x in tags])
-        articles['tags'] = tags
+        tags = soup.find('div', class_='detags')
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
         image = soup.find('img', class_="lazy_loaded")['data-src']
-        articles['image'] = image
+        articles['images'] = image
 
         #hapus link sisip
         for div in article.findAll('div'):
