@@ -132,6 +132,7 @@ class Liputan6:
         for link in article.findAll('div', class_="baca-juga"):
             link.decompose()
 
+
         #hapus video sisip
         #         for tag in detail.findAll('div', class_="detail_tag"):
         #             tag.decompose()
