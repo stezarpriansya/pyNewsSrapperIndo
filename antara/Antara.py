@@ -70,18 +70,22 @@ class Antara:
         soup = BeautifulSoup(html, "html5lib")
 
         #extract scrip json ld
-        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})[0].get_text(strip=True)
-        scripts = json.loads(scripts)
+        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})
+        if scripts:
+            scripts = json.loads(scripts[0].get_text(strip=True))
+        else:
+            return False
 
         #category
-        articles['category'] = scripts['"keywords"'][0][0].split(':')[1]
+        articles['category'] = scripts["keywords"][0][0].split(':')[1]
         articles['subcategory'] = ''
 
-        articles['id'] = soup.find('input', {'name': 'news_id'}).get('value')
+        id = soup.find('input', {'name': 'news_id'})
+        articles['id'] = id.get('value') if id else ''
 
         articles['url'] = url
 
-        article = soup.find('section', class_="content-post clearfix")
+        article = soup.find('article', class_="post-wrapper clearfix")
 
         #extract date
         pubdate = scripts['datePublished']
@@ -102,11 +106,12 @@ class Antara:
         articles['comments'] = 0
 
         #extract tags
-        tags = article.find('ul', class_="tags-widget clearfix").findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
+        tags = soup.find('ul', class_="tags-widget clearfix")
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'name':"twitter:image"})['content']
+        images =  soup.find("meta", attrs={'name':"twitter:image"})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={'class':'post-content clearfix'})
@@ -141,6 +146,8 @@ class Antara:
         """
         Untuk memasukkan berita ke DB
         """
+        if articles==False:
+            return False
         print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

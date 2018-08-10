@@ -126,8 +126,10 @@ class Okezone:
             div.decompose()
 
         #hapus all setelah clear fix
-        for det in detail.find('div', class_="clearfix mb20").findAllNext():
-            det.decompose()
+        mb20 = detail.find('div', class_="clearfix mb20")
+        if mb20:
+            for det in mb20.findAllNext():
+                det.decompose()
 
         #hapus all script
         for script in detail.findAll('script'):

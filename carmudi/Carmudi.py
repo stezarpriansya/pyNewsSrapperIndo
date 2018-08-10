@@ -80,7 +80,8 @@ class Carmudi:
 
         articles['subcategory'] = sub
 
-        articles['id'] = int(soup.find("a", class_="vw-post-shares-social vw-post-shares-social-facebook")['data-post-id'])
+        id = soup.find("a", class_="vw-post-shares-social vw-post-shares-social-facebook")
+        articles['id'] = int(id['data-post-id'] if id else '0')
         #category
         articles['category'] = cat
         articles['url'] = url
@@ -89,28 +90,34 @@ class Carmudi:
 
         #extract date
         #2018-07-27T15:18:00+00:00
-        pubdate = article.find("time", attrs={'itemprop':'datePublished'})['datetime']
+        pubdate = article.find("time", attrs={'itemprop':'datePublished'})
+        pubdate = pubdate['datetime'] if pubdate else '1970-01-01T01:01:01+00:00'
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
 
         #extract author
-        articles['author'] = article.find("a", class_="author-name").get_text(strip=True)
+        author = article.find("a", class_="author-name")
+        articles['author'] = author.get_text(strip=True) if author else ''
 
         #extract title
-        articles['title'] = article.find('h1', class_="entry-title").get_text(strip=True)
+        title = article.find('h1', class_="entry-title")
+        articles['title'] = title.get_text(strip=True) if title else ''
 
         #source
         articles['source'] = 'carmudi'
 
         #extract comments count
-        articles['comments'] = int(soup.find('a', class_="vw-post-meta-icon vw-post-comment-count").strip(' \t\n\r'))
+        comments = soup.find('a', class_="vw-post-meta-icon vw-post-comment-count")
+        articles['comments'] = int(comments.strip(' \t\n\r') if comments else '0')
 
         #extract tags
-        tags = article.find('div', class_="vw-tag-links").findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
+        tags =
+        tags = article.find('div', class_="vw-tag-links")
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
-        articles['images'] = soup.find('meta', attrs={'property':'og:image'})['content']
+        images = soup.find('meta', attrs={'property':'og:image'})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', class_="vw-post-content clearfix")
