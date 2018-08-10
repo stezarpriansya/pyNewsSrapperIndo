@@ -19,6 +19,7 @@ class Liputan6:
         link pada indeks category tertentu
         date format : YYYY/mm/dd
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
         url = "https://www.liputan6.com/"+cat_link+"/indeks/"+date+"?page="+str(page)
         print(url)
@@ -28,7 +29,7 @@ class Liputan6:
             response = requests.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
-            time.sleep(10)
+            time.sleep(5)
             details = self.getAllBerita(details, page, cat_link, category, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
@@ -53,14 +54,15 @@ class Liputan6:
                 max_page = int(max_page['data-page'].replace('\n', '').strip(' '))
 
             if page < max_page:
-                time.sleep(10)
+                time.sleep(5)
                 details = self.getAllBerita(details, page+1, cat_link, category, date)
 
         return details
 
     def getDetailBerita(self, link):
 
-        time.sleep(10)
+        time.sleep(5)
+        articles = {}
         #link
         url = link[0]
         response = requests.get(url)
@@ -69,8 +71,7 @@ class Liputan6:
         soup = BeautifulSoup(html, "html5lib")
 
         #articleid
-        articles['id'] = int(soup.find('article', class_="navbar--menu--item__headline")["data-article-id"])
-        articles['id']
+        articles['id'] = int(soup.find('article', class_='hentry main read-page--core-article')['data-article-id'])
 
         #extract subcategory from breadcrumb
         #bc = soup.find('ul', class_="breadcrumb__wrap")
@@ -120,12 +121,11 @@ class Liputan6:
 
         #extract tags
         tags = soup.findAll('span', class_="tags--snippet__name")
-        tags = ','.join([x.get_text(strip=True) for x in tags])
-        articles['tags'] = tags
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags]) if tags else ''
 
         #extract images
         image = soup.find('picture', class_="read-page--photo-gallery--item__picture").find('img')['src']
-        articles['image'] = image
+        articles['images'] = image
 
 
         #hapus link sisip
@@ -147,7 +147,7 @@ class Liputan6:
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
-        articles['content']
+        articles['content'] = content
         #print('memasukkan berita id ', articles['id'])
 
         return articles

@@ -32,7 +32,7 @@ class Oto:
             response = requests.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
-            time.sleep(10)
+            time.sleep(5)
             details = self.getAllBerita(details, page, cat, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
@@ -59,7 +59,7 @@ class Oto:
             max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').get_text(strip=True)))/12)
             # max_page = 2
             if page <= max_page:
-                time.sleep(10)
+                time.sleep(5)
                 details = self.getAllBerita(details, page+1, cat, date)
         con.close
         return details
@@ -68,7 +68,7 @@ class Oto:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
@@ -115,10 +115,10 @@ class Oto:
 
         #extract title
         title = soup.find('article', class_="newslistouter container-base").find('h1').get_text(strip=True)
-        articles['title'] = title
+        articles['title'] = title if title else ''
 
         #source
-        articles['source'] = 'oto.com'
+        articles['source'] = 'oto'
 
         #extract comments count
         articles['comments'] = 0

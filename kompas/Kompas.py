@@ -7,10 +7,13 @@ import re
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+import html
+import json
+import time
 from requests.exceptions import ConnectionError
 import unicodedata
-import time
 import mysql.connector
+
 # from selenium import webdriver
 # from selenium.webdriver.support.wait import WebDriverWait
 # from selenium.webdriver.support import expected_conditions as EC
@@ -23,6 +26,7 @@ class Kompas:
         link pada indeks category tertentu
         date format : YYYY-mm-dd
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
         url = "https://indeks.kompas.com/"+cat_link+"/"+date+"/"+str(page)
         print(url)
