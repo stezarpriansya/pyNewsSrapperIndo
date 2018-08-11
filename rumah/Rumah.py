@@ -14,8 +14,8 @@ from requests.exceptions import ConnectionError
 import unicodedata
 import mysql.connector
 
-class Rajamobil:
-    def getAllBerita(self, details, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+class Rumah:
+    def getAllBerita(self, details, cat, page, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
         Untuk mengambil seluruh url rajamobil
         link pada indeks category tertentu
@@ -24,7 +24,7 @@ class Rajamobil:
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
-        url = "https://"+cat+".rajamobil.com/page/"+str(page)
+        url = "https://www.rumah.com/berita-properti/category/"+cat+"?page="+str(page)
         print(url)
         # Make the request and create the response object: response
         try:
@@ -37,10 +37,10 @@ class Rajamobil:
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        indeks = soup.findAll('div', class_="td-block-span4")
+        indeks = contentDiv.findAll('div', {'class':'box news-article-lists'})
         flag = True
         for post in indeks:
-            link = [post.find('a', href=True)['href'], cat]
+            link = ["https://www.rumah.com"+post.find('a', href=True)['href'], ""]
             #check if there are a post with same url
             cursor = con.cursor()
             query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
@@ -52,15 +52,15 @@ class Rajamobil:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
+                if (self.insertDB(con, detail)) and (detail) :
                     details.append(detail)
 
         if flag:
-            el_page = soup.find('div', class_="page-nav td-pb-padding-side")
+            el_page = soup.find('ul', class_="pagination")
             if el_page:
-                max_page = int(el_page.find('a', class_="last").get_text(strip=True).strip(' '))
+                max_page = el_page.findAll('li')[-1].get_text(strip=True).strip(' '))
                 # max_page = 3
-                if page < max_page:
+                if str(page) != max_page:
                     time.sleep(10)
                     details = self.getAllBerita(details, page+1, cat, date)
         con.close()
@@ -75,45 +75,51 @@ class Rajamobil:
         #link
         url = link[0]
         response = requests.get(url)
-        html2 = response.text
+        html = response.text
         # Create a BeautifulSoup object from the HTML: soup
-        soup = BeautifulSoup(html2, "html5lib")
+        soup = BeautifulSoup(html, "html5lib")
+        #extract title
+        title = soup.find('meta', {'property':'og:title'})
+        if title:
+            articles['title'] = ['content']
+        else:
+            return {}
 
+        bc = soup.find('ol', class_="breadcrumb")
         #category
-        articles['category'] = 'Otomotif'
-        articles['subcategory'] = link[1]
+        articles['category'] = 'Properti'
+        articles['subcategory'] = bc.findAll('li')[1].get_text(strip=True)
 
         articles['url'] = url
 
-        article = soup.find('div', class_="td-pb-span8 td-main-content")
+        article = soup.find('div', class_="contents news-detail")
 
         #extract date
-        pubdate = soup.find('meta', {'property':'article:published_time'})['content']
+        pubdate = article.find('span', {'itemprop':'datePublished'})['content']
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = soup.find('input', {'id':'comment_post_ID'}).get('value')
+        articles['id'] = int(soup.find('input', {'name':'itemId'}).get_value())
 
         #extract author
-        articles['author'] = article.find('span', {'class': 'blue-clr text-right full-width display-ib'}).get_text(strip=True)
-
-        #extract title
-        articles['title'] = soup.find('div', {'class': 'td-author-by'}).find('a').get_text(strip=True).strip(' \t\n\r')
+        author = article.find('p', {'class': 'news-quick-info'})
+        articles['author'] = author.findAll('span')[0].get_text(strip=True) if author else ''
 
         #source
-        articles['source'] = 'rajamobil'
+        articles['source'] = 'rumah'
 
         #extract comments count
         articles['comments'] = 0
 
         #extract tags
-        tags = article.findAll('meta', {"property":"article:tag"})
-        articles['tags'] = ','.join([x['content'] for x in tags])
+        # tags = article.findAll('meta', {"property":"article:tag"})
+        #tag tidak tersedia
+        articles['tags'] = ''
 
         #extract images
         articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
 
         #extract detail
-        detail = article.find('div', attrs={"class":"td-post-content"})
+        detail = article.find('div', attrs={"class":"news-article-body"})
 
         #hapus video sisip
         for div in detail.findAll('div'):
@@ -122,6 +128,9 @@ class Rajamobil:
         #hapus all script
         for script in detail.findAll('script'):
             script.decompose()
+
+        for ifrane in detail.findAll('iframe'):
+            ifrane.decompose()
 
         #hapus all noscript
         for ns in detail.findAll('noscript'):
@@ -132,10 +141,13 @@ class Rajamobil:
             fig.decompose()
 
         #hapus linksisip
-        for ls in detail.findAll('ul'):
+        for ls in detail.findAll('p'):
             if ls.find('em'):
-                if 'baca' in ls.find('em').get_text(strip=True).lower():
+                if ls.find('em').find('strong').find('a')
                     ls.decompose()
+            elif:
+                ls.find('strong').get_text(strip=True) == articles['author']:
+                ls.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")

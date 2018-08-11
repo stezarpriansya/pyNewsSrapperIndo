@@ -14,8 +14,8 @@ from requests.exceptions import ConnectionError
 import unicodedata
 import mysql.connector
 
-class Rajamobil:
-    def getAllBerita(self, details, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+class Rumah123:
+    def getAllBerita(self, details, page, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
         Untuk mengambil seluruh url rajamobil
         link pada indeks category tertentu
@@ -24,7 +24,7 @@ class Rajamobil:
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
-        url = "https://"+cat+".rajamobil.com/page/"+str(page)
+        url = "https://artikel.rumah123.com/search?page="+str(page)
         print(url)
         # Make the request and create the response object: response
         try:
@@ -37,10 +37,11 @@ class Rajamobil:
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        indeks = soup.findAll('div', class_="td-block-span4")
+        contentDiv = soup.find('div', {'class':'news-list-container'})
+        indeks = contentDiv.findAll('li', class_="list-group-item")
         flag = True
         for post in indeks:
-            link = [post.find('a', href=True)['href'], cat]
+            link = [post.find('a', href=True)['href'], ""]
             #check if there are a post with same url
             cursor = con.cursor()
             query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
@@ -56,11 +57,12 @@ class Rajamobil:
                     details.append(detail)
 
         if flag:
-            el_page = soup.find('div', class_="page-nav td-pb-padding-side")
+            el_page = soup.find('ul', class_="pagination")
             if el_page:
-                max_page = int(el_page.find('a', class_="last").get_text(strip=True).strip(' '))
+                max_page = int(el_page.findAll('li')[-2].get_text(strip=True).strip(' '))
+                active_page = int(el_page.find('li', {'class':'active'}).get_text(strip=True).strip(' '))
                 # max_page = 3
-                if page < max_page:
+                if active_page != max_page:
                     time.sleep(10)
                     details = self.getAllBerita(details, page+1, cat, date)
         con.close()
@@ -75,45 +77,47 @@ class Rajamobil:
         #link
         url = link[0]
         response = requests.get(url)
-        html2 = response.text
+        html = response.text
         # Create a BeautifulSoup object from the HTML: soup
-        soup = BeautifulSoup(html2, "html5lib")
-
+        soup = BeautifulSoup(html, "html5lib")
+        bc = soup.find('ol', class_="breadcrumb")
         #category
-        articles['category'] = 'Otomotif'
-        articles['subcategory'] = link[1]
+        articles['category'] = 'Properti'
+        articles['subcategory'] = bc.findAll('li')[-2].get_text(strip=True)
 
         articles['url'] = url
 
-        article = soup.find('div', class_="td-pb-span8 td-main-content")
+        article = soup.find('div', class_="col-xs-12 col-sm-12 col-md-8 col-lg-8")
 
         #extract date
-        pubdate = soup.find('meta', {'property':'article:published_time'})['content']
-        pubdate = pubdate[0:19].strip(' \t\n\r')
-        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = soup.find('input', {'id':'comment_post_ID'}).get('value')
+        pubdate = article.find('meta', {'itemprop':'datePublished'})['content']
+        pubdate = pubdate.strip(' \t\n\r')
+        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+        articles['id'] = int(url.split('-')[-1])
 
         #extract author
-        articles['author'] = article.find('span', {'class': 'blue-clr text-right full-width display-ib'}).get_text(strip=True)
+        author = article.find('div', {'class': 'post-author'})
+        articles['author'] = author.get_text(strip=True) if author else ''
 
         #extract title
-        articles['title'] = soup.find('div', {'class': 'td-author-by'}).find('a').get_text(strip=True).strip(' \t\n\r')
+        articles['title'] = soup.find('meta', {'property':'og:title'})['content']
 
         #source
-        articles['source'] = 'rajamobil'
+        articles['source'] = 'rumah123'
 
         #extract comments count
         articles['comments'] = 0
 
         #extract tags
-        tags = article.findAll('meta', {"property":"article:tag"})
-        articles['tags'] = ','.join([x['content'] for x in tags])
+        # tags = article.findAll('meta', {"property":"article:tag"})
+        #tag tidak tersedia
+        articles['tags'] = ''
 
         #extract images
         articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
 
         #extract detail
-        detail = article.find('div', attrs={"class":"td-post-content"})
+        detail = article.find('div', attrs={"class":"post-text"})
 
         #hapus video sisip
         for div in detail.findAll('div'):
@@ -132,9 +136,9 @@ class Rajamobil:
             fig.decompose()
 
         #hapus linksisip
-        for ls in detail.findAll('ul'):
-            if ls.find('em'):
-                if 'baca' in ls.find('em').get_text(strip=True).lower():
+        for ls in detail.findAll('p'):
+            if 'baca' in ls.find('p').get_text(strip=True).lower():
+                if (ls.find('strong')) and (ls.find('a')):
                     ls.decompose()
 
         #extract content

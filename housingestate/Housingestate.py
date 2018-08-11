@@ -14,17 +14,18 @@ from requests.exceptions import ConnectionError
 import unicodedata
 import mysql.connector
 
-class Rajamobil:
-    def getAllBerita(self, details, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+class Housingestate:
+    def getAllBerita(self, details, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
-        Untuk mengambil seluruh url rajamobil
+        Untuk mengambil seluruh url carreview
         link pada indeks category tertentu
-        category = berita
+        category = all
         date = Y/m/d
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
-        url = "https://"+cat+".rajamobil.com/page/"+str(page)
+        date2 = datetime.strptime(date, '%Y/%m/%d')
+        url = "http://housingestate.id/wp-admin/admin-ajax.php?action=alm_query_posts&order=DESC&orderby=date&month="+str(date2.date().month)+"&year="+str(date2.date().year)
         print(url)
         # Make the request and create the response object: response
         try:
@@ -32,37 +33,30 @@ class Rajamobil:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page, cat, date)
+            details = self.getAllBerita(details, page, date)
         # Extract HTML texts contained in Response object: html
-        html = response.text
+        json_res = json.loads(response.text)
         # Create a BeautifulSoup object from the HTML: soup
-        soup = BeautifulSoup(html, "html5lib")
-        indeks = soup.findAll('div', class_="td-block-span4")
-        flag = True
+        soup = BeautifulSoup(json_res['html'], "html5lib")
+        indeks = soup.findAll('div', class_="item-box")
         for post in indeks:
-            link = [post.find('a', href=True)['href'], cat]
+            link = [post.find('a', href=True)['href'], ""]
             #check if there are a post with same url
             cursor = con.cursor()
             query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
             cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    details.append(detail)
+            #comment sementara
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if self.insertDB(con, detail):
+                # print("Insert berita ", articles['title'])
+                details.append(detail)
 
-        if flag:
-            el_page = soup.find('div', class_="page-nav td-pb-padding-side")
-            if el_page:
-                max_page = int(el_page.find('a', class_="last").get_text(strip=True).strip(' '))
-                # max_page = 3
-                if page < max_page:
-                    time.sleep(10)
-                    details = self.getAllBerita(details, page+1, cat, date)
         con.close()
         return details
 
@@ -70,7 +64,7 @@ class Rajamobil:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
@@ -78,42 +72,43 @@ class Rajamobil:
         html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html2, "html5lib")
-
+        print(url)
         #category
-        articles['category'] = 'Otomotif'
-        articles['subcategory'] = link[1]
+        articles['category'] = 'Properti'
+        articles['subcategory'] = soup.find('meta', {'property':'article:section'})['content']
 
         articles['url'] = url
 
-        article = soup.find('div', class_="td-pb-span8 td-main-content")
+        article = soup.find('div', {'id':'post-content'})
 
         #extract date
-        pubdate = soup.find('meta', {'property':'article:published_time'})['content']
+        pubdate = soup.find('meta', {'property':'article:published_time'})
+        pubdate = pubdate['content'] if pubdate else '1970-01-01T01:01:01+00:00'
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = soup.find('input', {'id':'comment_post_ID'}).get('value')
+        articles['id'] = int(soup.find('div', {'id':'ajax-load-more'})['data-post-id'])
 
         #extract author
-        articles['author'] = article.find('span', {'class': 'blue-clr text-right full-width display-ib'}).get_text(strip=True)
+        articles['author'] = article.find('span', {'class':'author'}).get_text(strip=True)
 
         #extract title
-        articles['title'] = soup.find('div', {'class': 'td-author-by'}).find('a').get_text(strip=True).strip(' \t\n\r')
+        articles['title'] = soup.find('meta', {'property':'og:title'})['content']
 
         #source
-        articles['source'] = 'rajamobil'
+        articles['source'] = 'housingestate'
 
         #extract comments count
         articles['comments'] = 0
 
         #extract tags
-        tags = article.findAll('meta', {"property":"article:tag"})
-        articles['tags'] = ','.join([x['content'] for x in tags])
+        tags = soup.find('meta', {'property':'article:tag'})['content']
+        articles['tags'] = tags
 
         #extract images
         articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
 
         #extract detail
-        detail = article.find('div', attrs={"class":"td-post-content"})
+        detail = article.find('div', attrs={'class':'content-txt'})
 
         #hapus video sisip
         for div in detail.findAll('div'):
@@ -127,14 +122,10 @@ class Rajamobil:
         for ns in detail.findAll('noscript'):
             ns.decompose()
 
-        #hapus all figure
-        for fig in detail.findAll('figure'):
-            fig.decompose()
-
         #hapus linksisip
-        for ls in detail.findAll('ul'):
-            if ls.find('em'):
-                if 'baca' in ls.find('em').get_text(strip=True).lower():
+        for ls in detail.findAll('p'):
+            if ls.find('strong'):
+                if 'baca' in ls.find('strong').get_text(strip=True).lower():
                     ls.decompose()
 
         #extract content
@@ -149,8 +140,7 @@ class Rajamobil:
         """
         Untuk memasukkan berita ke DB
         """
-        print("Insert berita ", articles['title'])
-
+        print(articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
