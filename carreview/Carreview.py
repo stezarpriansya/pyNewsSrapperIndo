@@ -52,9 +52,9 @@ class Carreview:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-
-                    details.append(detail)
+                if detail:
+                    if self.insertDB(con, detail):
+                        details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
@@ -90,16 +90,19 @@ class Carreview:
         article = soup.find('div', class_="left-content")
 
         #extract date
-        pubdate = article.find('li', {'class':'publish-date'}).get_text(strip=True).split(',')
+        pubdate = article.find('li', {'class':'publish-date'})
+        pubdate = pubdate.get_text(strip=True).split(',') if pubdate else ['','01-Jan-1970 00:00']
         pubdate = pubdate[1].strip(' \t\n\r').replace('Ags', 'Agt').replace('Juli', 'Jul').replace('Juni', 'Jun')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d-%b-%Y %H:%M"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
 
         #extract author
-        articles['author'] = article.find('span', {'itemprop': 'author'}).get_text(strip=True)
+        author = article.find('span', {'itemprop': 'author'})
+        articles['author'] = author.get_text(strip=True) if author else ''
 
         #extract title
-        articles['title'] = article.find('h1', {'class': 'entry-title'}).get_text(strip=True)
+        title = article.find('h1', {'class': 'entry-title'})
+        articles['title'] = title.get_text(strip=True) if title else ''
 
         #source
         articles['source'] = 'carreview'
@@ -109,10 +112,11 @@ class Carreview:
 
         #extract tags
         tags = article.find('div', class_="post-meta").findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags])
+        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags]) if tags else ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
+        images = soup.find("meta", attrs={'property':'og:image'})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={'class':'entry-content'})

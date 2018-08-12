@@ -41,8 +41,9 @@ class Okezone:
         for post in indeks:
             link = [post.find('a', href=True)['href'], ""]
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                details.append(detail)
+            if detail:
+                if self.insertDB(con, detail):
+                    details.append(detail)
 
         el_page = soup.find('div', class_="pagination-indexs")
         if el_page:
@@ -68,8 +69,11 @@ class Okezone:
         soup = BeautifulSoup(html, "html5lib")
 
         #extract scrip json ld
-        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})[-1].get_text(strip=True)
-        scripts = json.loads(scripts)
+        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})
+        if scripts:
+            scripts = json.loads(scripts[-1].get_text(strip=True))
+        else:
+            return False
 
         #extract subcategory from breadcrumb
         bc = soup.find('div', class_="breadcrumb")
@@ -84,8 +88,6 @@ class Okezone:
         articles['category'] = cat
         articles['subcategory'] = sub
 
-        articles['id'] = int(scripts['mainEntityOfPage']['@id'])
-
         articles['url'] = url
 
         article = soup.find('div', class_="container-bodyhome-left")
@@ -94,6 +96,14 @@ class Okezone:
         pubdate = scripts['datePublished']
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+
+        id = scripts['mainEntityOfPage']['@id']
+        try:
+            articles['id'] = int(id)
+        except ValueError as verr:
+            articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
+        except Exception as ex:
+            articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
 
         #extract author
         articles['author'] = scripts['author']['name']
@@ -105,14 +115,16 @@ class Okezone:
         articles['source'] = 'okezone'
 
         #extract comments count
-        articles['comments'] = int(soup.find('span', class_="commentWidget-total").find('b').get_text(strip=True).strip(' \t\n\r'))
+        komentar = soup.find('span', class_="commentWidget-total")
+        articles['comments'] = int(komentar.find('b').get_text(strip=True).strip(' \t\n\r')) if komentar else 0
 
         #extract tags
-        tags = article.find('div', class_="detail-tag").findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
+        tags = article.find('div', class_="detail-tag")
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
+        images = soup.find("meta", attrs={'property':'og:image'})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={'id':'contentx', 'class':'read'})

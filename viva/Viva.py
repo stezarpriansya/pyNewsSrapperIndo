@@ -41,8 +41,9 @@ class Viva:
                     link = [post.find('a', class_="title-content", href=True)['href'], ""]
                     print('masukan link ', link[0])
                     detail = self.getDetailBerita(link)
-                    if self.insertDB(con, detail):
-                        details.append(detail)
+                    if detail:
+                        if self.insertDB(con, detail):
+                            details.append(detail)
 
                 if date_max == date:
                     load_more = driver.find_element_by_id('load_terbaru_btn')
@@ -91,8 +92,11 @@ class Viva:
         soup = BeautifulSoup(html, "html5lib")
 
         #extract scrip json ld
-        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})[-1].get_text(strip=True)
-        scripts = json.loads(scripts)
+        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})
+        if scripts:
+            scripts = json.loads(scripts[-1].get_text(strip=True))
+        else:
+            return False
 
         #extract subcategory from breadcrumb
         bc = soup.find('div', class_="leading-breadcrumb")
@@ -108,8 +112,6 @@ class Viva:
         articles['category'] = cat
         articles['subcategory'] = sub
 
-        articles['id'] = int(scripts['mainEntityOfPage']['@id'])
-
         articles['url'] = url
 
         article = soup.find('section', attrs={'id':'viva-content'})
@@ -119,24 +121,34 @@ class Viva:
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
 
+        id = scripts['mainEntityOfPage']['@id']
+        try:
+            articles['id'] = int(id)
+        except ValueError as verr:
+            articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
+        except Exception as ex:
+            articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
         #extract author
         articles['author'] = scripts['author']['name']
 
         #extract title
-        articles['title'] = article.find('div', class_="leading-title").find('h1').get_text(strip=True)
+        title = article.find('div', class_="leading-title").find('h1')
+        articles['title'] = title.get_text(strip=True) if title else ''
 
         #source
         articles['source'] = 'viva'
 
         #extract comments count
-        articles['comments'] = int(article.find('comment-count').get_text(strip=True).strip(' \t\n\r'))
+        komentar = article.find('comment-count')
+        articles['comments'] = int(komentar.get_text(strip=True).strip(' \t\n\r')) if komentar else 0
 
         #extract tags
-        tags = soup.find('meta', attrs={'name':'news_keywords'})['content']
-        articles['tags'] = tags
+        tags = soup.find('meta', attrs={'name':'news_keywords'})
+        articles['tags'] = tags['content'] if tags else ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
+        images = soup.find("meta", attrs={'property':'og:image'})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={"class":"article-detail article-detail-v2"})

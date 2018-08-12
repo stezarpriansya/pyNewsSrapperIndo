@@ -41,9 +41,10 @@ class Antara:
         for post in indeks:
             link = [post.find('a', href=True)['href'], ""]
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                # print("Insert berita ", articles['title'])
-                details.append(detail)
+            if detail:
+                if self.insertDB(con, detail):
+                    # print("Insert berita ", articles['title'])
+                    details.append(detail)
 
         el_page = soup.find('ul', class_="pagination pagination-sm")
         if el_page:
@@ -77,11 +78,8 @@ class Antara:
             return False
 
         #category
-        articles['category'] = scripts["keywords"][0][0].split(':')[1]
-        articles['subcategory'] = ''
-
-        id = soup.find('input', {'name': 'news_id'})
-        articles['id'] = id.get('value') if id else ''
+        articles['category'] = scripts["keywords"][0][0].split(':')[0]
+        articles['subcategory'] = scripts["keywords"][0][0].split(':')[1]
 
         articles['url'] = url
 
@@ -91,6 +89,9 @@ class Antara:
         pubdate = scripts['datePublished']
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+
+        id = soup.find('input', {'name': 'news_id'})
+        articles['id'] = int(id.get('value')) if id else int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
 
         #extract author
         articles['author'] = scripts['author']['name']

@@ -53,14 +53,15 @@ class Rumah123:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    details.append(detail)
+                if detail :
+                    if self.insertDB(con, detail):
+                        details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
             if el_page:
-                max_page = int(el_page.findAll('li')[-2].get_text(strip=True).strip(' '))
-                active_page = int(el_page.find('li', {'class':'active'}).get_text(strip=True).strip(' '))
+                max_page = el_page.findAll('li')[-2].get_text(strip=True).strip(' ')
+                active_page = el_page.find('li', {'class':'active'}).get_text(strip=True).strip(' ')
                 # max_page = 3
                 if active_page != max_page:
                     time.sleep(10)
@@ -83,14 +84,15 @@ class Rumah123:
         bc = soup.find('ol', class_="breadcrumb")
         #category
         articles['category'] = 'Properti'
-        articles['subcategory'] = bc.findAll('li')[-2].get_text(strip=True)
+        articles['subcategory'] = bc.findAll('li')[-2].get_text(strip=True) if bc else ''
 
         articles['url'] = url
 
         article = soup.find('div', class_="col-xs-12 col-sm-12 col-md-8 col-lg-8")
 
         #extract date
-        pubdate = article.find('meta', {'itemprop':'datePublished'})['content']
+        pubdate = article.find('meta', {'itemprop':'datePublished'})
+        pubdate = pubdate['content'] if pubdate else ''
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = int(url.split('-')[-1])
@@ -100,7 +102,8 @@ class Rumah123:
         articles['author'] = author.get_text(strip=True) if author else ''
 
         #extract title
-        articles['title'] = soup.find('meta', {'property':'og:title'})['content']
+        title = soup.find('meta', {'property':'og:title'})
+        articles['title'] = title['content'] if title else ''
 
         #source
         articles['source'] = 'rumah123'
@@ -114,7 +117,8 @@ class Rumah123:
         articles['tags'] = ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
+        images = soup.find("meta", attrs={'property':'og:image'})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={"class":"post-text"})

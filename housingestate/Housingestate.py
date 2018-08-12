@@ -53,9 +53,10 @@ class Housingestate:
             #     break
             # else:
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                # print("Insert berita ", articles['title'])
-                details.append(detail)
+            if detail:
+                if self.insertDB(con, detail):
+                    # print("Insert berita ", articles['title'])
+                    details.append(detail)
 
         con.close()
         return details
@@ -75,7 +76,8 @@ class Housingestate:
         print(url)
         #category
         articles['category'] = 'Properti'
-        articles['subcategory'] = soup.find('meta', {'property':'article:section'})['content']
+        sb = soup.find('meta', {'property':'article:section'})
+        articles['subcategory'] = sb['content'] if sb else ''
 
         articles['url'] = url
 
@@ -86,13 +88,17 @@ class Housingestate:
         pubdate = pubdate['content'] if pubdate else '1970-01-01T01:01:01+00:00'
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = int(soup.find('div', {'id':'ajax-load-more'})['data-post-id'])
+
+        id = soup.find('div', {'id':'ajax-load-more'})
+        articles['id'] = int(id['data-post-id']) if id else int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
 
         #extract author
-        articles['author'] = article.find('span', {'class':'author'}).get_text(strip=True)
+        author = article.find('span', {'class':'author'})
+        articles['author'] = author.get_text(strip=True) if author else ''
 
         #extract title
-        articles['title'] = soup.find('meta', {'property':'og:title'})['content']
+        title = soup.find('meta', {'property':'og:title'})
+        articles['title'] = title['content'] if title else ''
 
         #source
         articles['source'] = 'housingestate'
@@ -101,11 +107,12 @@ class Housingestate:
         articles['comments'] = 0
 
         #extract tags
-        tags = soup.find('meta', {'property':'article:tag'})['content']
-        articles['tags'] = tags
+        tags = soup.find('meta', {'property':'article:tag'})
+        articles['tags'] = tags['content'] if tags else ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
+        images = soup.find("meta", attrs={'property':'og:image'})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={'class':'content-txt'})

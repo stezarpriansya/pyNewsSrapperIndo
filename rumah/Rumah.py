@@ -52,13 +52,14 @@ class Rumah:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                if (self.insertDB(con, detail)) and (detail) :
-                    details.append(detail)
+                if detail:
+                    if (self.insertDB(con, detail)) :
+                        details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
             if el_page:
-                max_page = el_page.findAll('li')[-1].get_text(strip=True).strip(' '))
+                max_page = el_page.findAll('li')[-1].get_text(strip=True).strip(' ')
                 # max_page = 3
                 if str(page) != max_page:
                     time.sleep(10)
@@ -88,17 +89,20 @@ class Rumah:
         bc = soup.find('ol', class_="breadcrumb")
         #category
         articles['category'] = 'Properti'
-        articles['subcategory'] = bc.findAll('li')[1].get_text(strip=True)
+        articles['subcategory'] = bc.findAll('li')[1].get_text(strip=True) if bc else ''
 
         articles['url'] = url
 
         article = soup.find('div', class_="contents news-detail")
 
         #extract date
-        pubdate = article.find('span', {'itemprop':'datePublished'})['content']
+        pubdate = article.find('span', {'itemprop':'datePublished'})
+        pubdate = pubdate['content'] if pubdate else '1970-01-01T00:00:00+00:00'
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = int(soup.find('input', {'name':'itemId'}).get_value())
+
+        id = soup.find('input', {'name':'itemId'})
+        articles['id'] = int(id.get('value')) if id else int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
 
         #extract author
         author = article.find('p', {'class': 'news-quick-info'})
@@ -116,7 +120,8 @@ class Rumah:
         articles['tags'] = ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
+        images =  soup.find("meta", attrs={'property':'og:image'})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={"class":"news-article-body"})
@@ -143,10 +148,9 @@ class Rumah:
         #hapus linksisip
         for ls in detail.findAll('p'):
             if ls.find('em'):
-                if ls.find('em').find('strong').find('a')
+                if ls.find('em').find('strong').find('a'):
                     ls.decompose()
-            elif:
-                ls.find('strong').get_text(strip=True) == articles['author']:
+            elif ls.find('strong').get_text(strip=True) == articles['author']:
                 ls.decompose()
 
         #extract content

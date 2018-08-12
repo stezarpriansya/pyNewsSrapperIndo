@@ -39,9 +39,9 @@ class Carmudi:
         for post in indeks:
             link = [post.find('a', href=True)['href'], ""]
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-
-                details.append(detail)
+            if detail:
+                if self.insertDB(con, detail):
+                    details.append(detail)
 
         el_page = soup.find('div', class_="vw-page-navigation-pagination")
         if el_page:
@@ -79,9 +79,6 @@ class Carmudi:
             sub = ''
 
         articles['subcategory'] = sub
-
-        id = soup.find("a", class_="vw-post-shares-social vw-post-shares-social-facebook")
-        articles['id'] = int(id['data-post-id'] if id else '0')
         #category
         articles['category'] = cat
         articles['url'] = url
@@ -94,6 +91,9 @@ class Carmudi:
         pubdate = pubdate['datetime'] if pubdate else '1970-01-01T01:01:01+00:00'
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+
+        id = soup.find("a", class_="vw-post-shares-social vw-post-shares-social-facebook")
+        articles['id'] = int(id['data-post-id']) if id else int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
 
         #extract author
         author = article.find("a", class_="author-name")
