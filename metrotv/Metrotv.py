@@ -20,6 +20,7 @@ class Metrotv:
         link pada indeks category tertentu
         date format : YYYY-mm-dd
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
         url = "http://"+cat_link+".metrotvnews.com/index/"+date+"/"+ str(offset)
         print(url)
@@ -28,15 +29,14 @@ class Metrotv:
             response = requests.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
-            time.sleep(10)
+            time.sleep(5)
             details = self.getAllBerita(details, page, offset+30, cat_link, category, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        contentDiv = soup.find('div', class_="style_06").findAll('h2')
-        contentDiv
-        for post in contentDiv:
+        contentDiv = soup.find('div', class_="style_06")
+        for post in contentDiv.findAll('h2'):
             link = [post.find('a',href=True)['href']]
             detail = self.getDetailBerita(link)
             if self.insertDB(con, detail):
@@ -48,21 +48,19 @@ class Metrotv:
             max_page = int(a_page['data-ci-pagination-page'].replace('\n', '').strip(' '))
 
             if page < max_page:
-                time.sleep(10)
+                time.sleep(5)
                 details = self.getAllBerita(details, page+1, offset+30, cat_link, category, date)
 
         return details
 
-    def getDetailBerita(self, url):
-        time.sleep(10)
+    def getDetailBerita(self, link):
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
-        #print(url)
         response = requests.get(url)
         html = response.text
-
-        #Create a BeautifulSoup object from the HTML: soup
+        # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
 
         #extract subcategory from breadcrumb
@@ -73,8 +71,8 @@ class Metrotv:
         sub = bc.findAll('a')[-1].get_text(strip=True)
 
         #articles
-        article_id = int(soup.find('meta', attrs={"property":"og:image"})['content'].replace('//','').split('/')[6])
-        articles['id'] = article_id
+        article_id = soup.find('meta', attrs={"property":"og:image"})['content']
+        articles['id'] = int(article_id.replace('//','').split('/')[6]) if article_id !="" else ''
 
         #category
         #category
@@ -86,21 +84,23 @@ class Metrotv:
         article = soup.find('div', class_="tru")
 
         #extract date
-        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[0].get_text(strip=True))
-        pubdate_author = scripts['datePublished']
-        # pubdate_author_split = pubdate_author.split(' \xa0\xa0 • \xa0\xa0 ')
-        # pubdate = pubdate_author_split[1]
-        pubdate = pubdate.strip(' ')
-        # pubdate = pubdate.replace(' WIB','')
-        pubdate = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), "%Y-%m-%d %H:%M:%S")
+        pubdate_author = soup.find('div', class_='reg').text
+        pubdate_author_split = pubdate_author.split(' \xa0\xa0 • \xa0\xa0 ')
+        pubdate = pubdate_author_split[1]
+        pubdate = pubdate.strip(' \t\n\r')
+        pubdate = pubdate.replace(' WIB','')
+        pubdate = pubdate.replace('Aug', 'Agt').replace('Juli', 'Jul').replace('Juni', 'Jun')
+        pubdate = datetime.strftime(datetime.strptime(pubdate, "%A, %d %b %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
         articles['pubdate'] = pubdate
 
         #extract author
-        author = scripts['datePublished']['name']
+        author = pubdate_author_split[0]
         articles['author'] = author
 
         #extract title
-        articles['title'] = soup.find('meta', attrs={"property":"og:title"})['content']
+        title = soup.find('meta', attrs={"property":"og:title"})
+        articles['title'] = title['content'] if title else ''
+
         if ("foto" in sub.lower()) or  "video" in sub.lower():
             return False
 
