@@ -51,9 +51,9 @@ class Seva:
         for post in indeks:
             link = [post.find('a', href=True)['href'], cat_link, category]
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-
-                details.append(detail)
+            if detail:
+                if self.insertDB(con, detail):
+                    details.append(detail)
 
         el_page = soup.find('nav', attrs={'aria-label':'Page navigation example'})
         if el_page:
@@ -63,7 +63,7 @@ class Seva:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, cat_link, category)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """
@@ -92,7 +92,8 @@ class Seva:
 
         #extract date
         #2018-07-27T15:18:00+00:00
-        pubdate = soup.find("meta", attrs={'property':'article:published_time'})['content']
+        pubdate = soup.find("meta", attrs={'property':'article:published_time'})
+        pubdate = pubdate['content'] if pubdate else '1970-01-01T00:00:01+00:00'
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
 
@@ -101,7 +102,8 @@ class Seva:
         articles['author'] = author.find('div', class_="details").get_text(strip=True) if author else ''
 
         #extract title
-        articles['title'] = article.find('div', class_="title").find('h1').get_text(strip=True)
+        title = article.find('div', class_="title").find('h1')
+        articles['title'] = title.get_text(strip=True) if title else ''
 
         #source
         articles['source'] = 'seva'
@@ -111,10 +113,11 @@ class Seva:
 
         #extract tags
         tags = soup.findAll('meta', attrs={'property':'article:tag'})
-        articles['tags'] = ','.join([x['content'] for x in tags])
+        articles['tags'] = ','.join([x['content'] for x in tags]) if tags else ''
 
         #extract images
-        articles['images'] = soup.find('meta', attrs={'property':'og:image'})['content']
+        images = soup.find('meta', attrs={'property':'og:image'})
+        articles['images'] = images['content']
 
         #extract detail
         detail = article.find('div', class_="content")
