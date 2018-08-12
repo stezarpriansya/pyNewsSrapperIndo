@@ -51,7 +51,7 @@ class Metrotv:
                 time.sleep(5)
                 details = self.getAllBerita(details, page+1, offset+30, cat_link, category, date)
 
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         time.sleep(5)
