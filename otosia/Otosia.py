@@ -22,7 +22,6 @@ class Otosia:
         date format : YYYY/mm/dd
         category : berita, tips, lifetyle, selebriti, komunitas, galeri
         """
-
         print("page ", page)
         if page==1:
             url = "https://www.otosia.com/"+cat+"/index.html"
@@ -42,7 +41,7 @@ class Otosia:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('li', class_="artbox-text")
-        flag = True
+        # flag = True
         for post in indeks:
             link = ["https://www.otosia.com"+ post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
@@ -62,16 +61,15 @@ class Otosia:
                 if self.insertDB(detail):
                     details.append(detail)
 
-        if flag:
-            el_page = soup.find('div', class_="mphold-g")
-            if el_page:
-                last_page = int(el_page.findAll('a')[-2].get_text(strip=True))
-                active_page = int(el_page.find('span', class_="mpnolink").get_text(strip=True))
+        # if flag:
+        el_page = soup.find('div', class_="mphold-g")
+        if el_page:
+            last_page = int(el_page.findAll('a')[-2].get_text(strip=True))
+            active_page = int(el_page.find('span', class_="mpnolink").get_text(strip=True))
 
-                if active_page <= last_page:
-                    time.sleep(5)
-                    details = self.getAllBerita(details, active_page+1, cat, date)
-
+            if active_page <= last_page:
+                time.sleep(5)
+                details = self.getAllBerita(details, active_page+1, cat, date)
 
         return 'berhasil ambil semua berita'
 
