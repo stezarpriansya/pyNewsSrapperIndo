@@ -53,8 +53,9 @@ class Cintamobil:
             #     break
             # else:
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                details.append(detail)
+            if detail:
+                if self.insertDB(con, detail):
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="paging pull-right")
@@ -65,7 +66,7 @@ class Cintamobil:
                     time.sleep(5)
                     details = self.getAllBerita(details, page+1, cat, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """
@@ -90,10 +91,13 @@ class Cintamobil:
 
         #extract date
         # print(article)
-        pubdate = article.find('h1', {'class':'title fsize-20 fweight-bold mg-bottom-5'}).findNextSiblings()[0].find('span').get_text(strip=True)
+        pubdate = article.find('h1', {'class':'title fsize-20 fweight-bold mg-bottom-5'}).findNextSiblings()
+        pubdate = pubdate[0].find('span').get_text(strip=True) if pubdate else '01-01-1970'
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d/%m/%Y"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = soup.find('input', {'id':'ArticleId'}).get('value')
+
+        id = soup.find('input', {'id':'ArticleId'})
+        articles['id'] = int(id.get('value')) if id else int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
 
         #extract author
         author = article.find('span', {'class': 'blue-clr text-right full-width display-ib'})
