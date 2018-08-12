@@ -47,21 +47,32 @@ class Seva:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         # contentDiv = soup.find('div', class_="col-md-6")
+        flag = True
         indeks = soup.findAll('div', class_='article-box')
         for post in indeks:
             link = [post.find('a', href=True)['href'], cat_link, category]
-            detail = self.getDetailBerita(link)
-            if detail:
-                if self.insertDB(con, detail):
-                    details.append(detail)
+            #check if there are a post with same url
+            cursor = con.cursor()
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            cursor.close()
+            if result[0] > 0:
+                flag = False
+                break
+            else:
+                detail = self.getDetailBerita(link)
+                if detail:
+                    if self.insertDB(con, detail):
+                        details.append(detail)
+        if flag:
+            el_page = soup.find('nav', attrs={'aria-label':'Page navigation example'})
+            if el_page:
+                max_page = int(soup.find('ul', class_="pagination").findAll('li')[-2].find('a').get_text(strip=True).replace('\n', '').strip(' '))
 
-        el_page = soup.find('nav', attrs={'aria-label':'Page navigation example'})
-        if el_page:
-            max_page = int(soup.find('ul', class_="pagination").findAll('li')[-2].find('a').get_text(strip=True).replace('\n', '').strip(' '))
-
-            if page < max_page:
-                time.sleep(10)
-                details = self.getAllBerita(details, page+1, cat_link, category)
+                if page < max_page:
+                    time.sleep(5)
+                    details = self.getAllBerita(details, page+1, cat_link, category)
         con.close()
         return 'berhasil ambil semua berita'
 
@@ -69,7 +80,7 @@ class Seva:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]

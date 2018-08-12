@@ -73,7 +73,13 @@ class Otorider:
         articles = {}
         #link
         url = link[0]
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+        except ConnectionError:
+            print("Connection Error, but it's still trying...")
+            time.sleep(10)
+            details = self.getDetailBerita(link)
+
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
@@ -82,7 +88,7 @@ class Otorider:
         subcat = ''
         if link[1] == 1:
             subcat = 'Tips Modifikasi'
-        elif cat == 12:
+        elif link[1]  == 12:
             subcat = 'Berita'
         else:
             subcat = 'Komunitas'
@@ -99,7 +105,7 @@ class Otorider:
         pubdate = pubdate['content'] if pubdate else '1970-01-01 00:00:00'
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
+        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S").timestamp()) + len(url)
 
         #extract author
         author = soup.find('meta', {'property': 'article:author'})

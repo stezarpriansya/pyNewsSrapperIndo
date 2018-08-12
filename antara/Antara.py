@@ -65,6 +65,9 @@ class Antara:
         articles = {}
         #link
         url = link[0]
+        if ('video' in url.split('/')) or ('foto' in url.split('/')):
+            return False
+        
         response = requests.get(url)
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup

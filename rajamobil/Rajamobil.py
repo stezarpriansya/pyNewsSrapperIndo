@@ -42,19 +42,19 @@ class Rajamobil:
         for post in indeks:
             link = [post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
-            cursor = con.cursor()
-            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            cursor.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if detail:
-                    if self.insertDB(con, detail):
-                        details.append(detail)
+            # cursor = con.cursor()
+            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            # cursor.execute(query)
+            # result = cursor.fetchone()
+            # cursor.close()
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if detail:
+                if self.insertDB(con, detail):
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="page-nav td-pb-padding-side")
@@ -62,7 +62,7 @@ class Rajamobil:
                 max_page = int(el_page.find('a', class_="last").get_text(strip=True).strip(' '))
                 # max_page = 3
                 if page < max_page:
-                    time.sleep(10)
+                    time.sleep(5)
                     details = self.getAllBerita(details, page+1, cat, date)
         con.close()
         return 'berhasil ambil semua berita'
@@ -71,10 +71,12 @@ class Rajamobil:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
+        if ('video' in url.split('/')) or ('foto' in url.split('/')) or ('uncategorized' in url.split('/')) or ('promo' in url.split('/')):
+            return False
         response = requests.get(url)
         html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -85,6 +87,7 @@ class Rajamobil:
         articles['subcategory'] = link[1]
 
         articles['url'] = url
+        print(url)
 
         article = soup.find('div', class_="td-pb-span8 td-main-content")
 
@@ -98,12 +101,12 @@ class Rajamobil:
         articles['id'] = id.get('value') if id else int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
 
         #extract author
-        author = article.find('span', {'class': 'blue-clr text-right full-width display-ib'})
-        articles['author'] = author.get_text(strip=True)
+        author = soup.find('div', {'class': 'td-post-author-name'}).find('a')
+        articles['author'] = author.get_text(strip=True).strip(' \t\n\r') if author else ''
 
         #extract title
-        title = soup.find('div', {'class': 'td-author-by'}).find('a')
-        articles['title'] = title.get_text(strip=True).strip(' \t\n\r')
+        title = soup.find('h1', {'class': 'entry-title'})
+        articles['title'] = title.get_text(strip=True).strip(' \t\n\r') if title else ''
 
         #source
         articles['source'] = 'rajamobil'
@@ -117,7 +120,7 @@ class Rajamobil:
 
         #extract images
         images = soup.find("meta", attrs={'property':'og:image'})
-        articles['images'] = images['content']
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={"class":"td-post-content"})

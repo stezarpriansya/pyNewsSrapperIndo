@@ -63,7 +63,7 @@ class Gridoto:
         if flag:
             el_page = soup.find('ul', class_="pagination_number")
             if el_page:
-                last_page = el_page.findAll('li')[-1].find('a')['data-ci-pagination-page'].replace('\n', '').strip(' ')
+                last_page = el_page.findAll('li')[-1].get_text(strip=True).replace('\n', '').strip(' ')
                 active_page = el_page.find('li', class_="active").get_text(strip=True).replace('\n', '').strip(' ')
                 # last_page = 2
                 if last_page != active_page:
@@ -81,14 +81,20 @@ class Gridoto:
         articles = {}
         #link
         url = link[0]+'?page=all'
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+        except ConnectionError:
+            print("Connection Error, but it's still trying...")
+            time.sleep(10)
+            details = self.getDetailBerita(link)
         html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html2, "html5lib")
         print(url)
         scripts = soup.findAll('script', attrs={'type':'application/ld+json'})
         if scripts:
-            scripts = json.loads(html.unescape(scripts[-1].get_text(strip=True)))
+            scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts[-1].get_text(strip=True)))
+            scripts = json.loads(scripts)
         else:
             return False
         #category

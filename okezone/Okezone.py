@@ -101,9 +101,9 @@ class Okezone:
         try:
             articles['id'] = int(id)
         except ValueError as verr:
-            articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
+            articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M:%S").timestamp()) + len(url)
         except Exception as ex:
-            articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
+            articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M:%S").timestamp()) + len(url)
 
         #extract author
         articles['author'] = scripts['author']['name']

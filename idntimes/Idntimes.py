@@ -25,7 +25,8 @@ class Idntimes:
         print("page ", page)
         url = "https://www.idntimes.com/ajax/index?category="+cat_link+"&type=all&page="+str(page)+"&date="+date
         print(url)
-        # Make the request and create the restry:
+        # Make the request and create the res
+        try:
             response = requests.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
@@ -66,7 +67,9 @@ class Idntimes:
         #extract scrip json ld
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
 #         print(len(scripts_all))
-        if scripts2:
+        scripts = ''
+        scripts2 = ''
+        if scripts_all:
             scripts = json.loads(scripts_all[-2].get_text(strip=True))
             scripts2 = json.loads(scripts_all[-1].get_text(strip=True))
         else:
@@ -81,10 +84,12 @@ class Idntimes:
         article = soup.find('section', class_="content-post clearfix")
 
         #extract date
-        pubdate = scripts['datePublished']
-        pubdate = pubdate[0:19].strip(' \t\n\r')
-        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
+        pubdate = soup.find('time', class_="date")
+        pubdate = pubdate['datetime'] if pubdate else '1970-01-01'
+        pubdate = pubdate.strip(' \t\n\r')
+        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d"), '%Y-%m-%d %H:%M:%S')
+
+        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%d").timestamp()) + len(url)
 
         #extract author
         articles['author'] = scripts['author']['name']
