@@ -42,8 +42,9 @@ class Detik:
         for post in indeks:
             link = [post.find('a', href=True)['href'], category]
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                details.append(detail)
+            if detail:
+                if self.insertDB(con, detail):
+                    details.append(detail)
 
         el_page = soup.find('div', class_="paging paging2")
         if el_page:
@@ -53,7 +54,7 @@ class Detik:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, cat_link, category, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """
@@ -78,8 +79,6 @@ class Detik:
             return False
 
         articles['subcategory'] = sub
-
-        articles['id'] = int(soup.find("meta", attrs={'name':'articleid'})['content'])
         #category
         articles['category'] = link[1]
         articles['url'] = url
@@ -91,24 +90,31 @@ class Detik:
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y/%m/%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
 
+        id = soup.find("meta", attrs={'name':'articleid'})
+        articles['id'] = int(id['content']) if id else int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
+
         #extract author
-        articles['author'] = soup.find("meta", attrs={'name':'author'})['content']
+        author = soup.find("meta", attrs={'name':'author'})
+        articles['author'] = author['content'] if author else ''
 
         #extract title
-        articles['title'] = article.find('div', class_="jdl").find('h1').get_text(strip=True)
+        title =  article.find('div', class_="jdl").find('h1')
+        articles['title'] = title.get_text(strip=True) if title else ''
 
         #source
         articles['source'] = 'detik'
 
         #extract comments count
-        articles['comments'] = int(soup.find('a', class_="komentar").find('span').get_text(strip=True).replace('Komentar', '').strip(' \t\n\r'))
+        komentar = soup.find('a', class_="komentar")
+        articles['comments'] = int(komentar.find('span').get_text(strip=True).replace('Komentar', '').strip(' \t\n\r')) if komentar else 0
 
         #extract tags
-        tags = article.find('div', class_="detail_tag").findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
+        tags = article.find('div', class_="detail_tag")
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
-        articles['images'] = article.find('div', class_="pic_artikel").find('img')['src']
+        images = article.find('div', class_="pic_artikel").find('img')
+        articles['images'] = images['src'] if images else ''
 
         #extract detail
         detail = article.find('div', class_="detail_text")
