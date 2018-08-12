@@ -55,9 +55,10 @@ class Gridoto:
             #     break
             # else:
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                # print("Insert berita ", articles['title'])
-                details.append(detail)
+            if detail:
+                if self.insertDB(con, detail):
+                    # print("Insert berita ", articles['title'])
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination_number")
@@ -70,7 +71,7 @@ class Gridoto:
                     details = self.getAllBerita(details, page+1, date)
 
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """
@@ -85,7 +86,11 @@ class Gridoto:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html2, "html5lib")
         print(url)
-        scripts = json.loads(html.unescape(soup.findAll('script', {'type':'application/ld+json'})[-1].get_text(strip=True)))
+        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})
+        if scripts:
+            scripts = json.loads(html.unescape(scripts[-1].get_text(strip=True)))
+        else:
+            return False
         #category
         articles['category'] = 'Otomotif'
         articles['subcategory'] = link[1]
@@ -95,13 +100,17 @@ class Gridoto:
         article = soup.find('div', class_="read__article clearfix")
 
         #extract date
-        pubdate = soup.find('meta', {'name':'content_date'})['content']
+        pubdate = soup.find('meta', {'name':'content_date'})
+        pubdate = pubdate['content'] if pubdate else '1970-01-01 00:00:00'
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = int(soup.find('meta', {'name':'content_id'})['content'])
+
+        id = soup.find('meta', {'name':'content_id'})
+        articles['id'] = int(id['content']) if id else int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
 
         #extract author
-        articles['author'] = soup.find('meta', {'name':'content_author'})['content']
+        author = soup.find('meta', {'name':'content_author'})
+        articles['author'] = author['content'] if author else ''
 
         #extract title
         articles['title'] = scripts['headline']
@@ -113,11 +122,12 @@ class Gridoto:
         articles['comments'] = 0
 
         #extract tags
-        tags = soup.find('meta', {'name':'content_tag'})['content']
-        articles['tags'] = tags
+        tags = soup.find('meta', {'name':'content_tag'})
+        articles['tags'] = tags['content'] if tags else ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
+        images = soup.find("meta", attrs={'property':'og:image'})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={'class':'read__right'})
