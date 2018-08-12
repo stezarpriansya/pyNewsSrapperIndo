@@ -52,8 +52,9 @@ class Tribun:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    details.append(detail)
+                if detail:
+                    if self.insertDB(con, detail):
+                        details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="paging")
@@ -69,7 +70,7 @@ class Tribun:
                     details = self.getAllBerita(details, page+1, date)
 
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """
@@ -84,11 +85,16 @@ class Tribun:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
 
-        scripts = json.loads(soup.findAll('script', {'type':'application/ld+json'})[0].get_text(strip=True))
+        scripts = soup.findAll('script', {'type':'application/ld+json'})
+        if scripts:
+            scripts = json.loads(scripts[0].get_text(strip=True))
+        else:
+            return False
         #category
         categories = soup.findAll('meta', {'name':'cXenseParse:category'})
-        articles['category'] = categories[0]['content']
-        articles['subcategory'] = categories[1]['content']
+
+        articles['category'] = categories[0]['content'] if categories else 'Berita'
+        articles['subcategory'] = categories[1]['content'] if categories else ''
 
         articles['url'] = url
 
@@ -98,7 +104,9 @@ class Tribun:
         pubdate = scripts['datePublished']
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = int(soup.find('meta', {"property":"android:app_id"})['content'])
+
+        id = soup.find('meta', {"property":"android:app_id"})
+        articles['id'] = int(id['content']) if id else int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
 
         #extract author
         articles['author'] = scripts['author']['name']
@@ -113,8 +121,8 @@ class Tribun:
         articles['comments'] = 0
 
         #extract tags
-        tags = article.find('div', class_="mb10 f16 ln24 mb10 mt5").findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags])
+        tags = article.find('div', class_="mb10 f16 ln24 mb10 mt5")
+        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags.findAll('a')]) if tags else ''
 
         #extract images
         articles['images'] = scripts['image']['url']
