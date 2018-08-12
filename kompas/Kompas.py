@@ -36,7 +36,7 @@ class Kompas:
             response = requests.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
-            time.sleep(20)
+            time.sleep(25)
             details = self.getAllBerita(details, page, cat_link, category, date)
 
         # Extract HTML texts contained in Response object: html
@@ -59,14 +59,14 @@ class Kompas:
                 max_page = int(a_page['data-ci-pagination-page'].replace('\n', '').strip(' '))
 
             if page < max_page:
-                time.sleep(20)
+                time.sleep(25)
                 details = self.getAllBerita(details, page+1, cat_link, category, date)
 
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
 
-        time.sleep(20)
+        time.sleep(25)
         articles = {}
         #link
         url = link[0]

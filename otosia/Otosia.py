@@ -121,8 +121,8 @@ class Otosia:
         articles['author'] = author
 
         #extract title
-        title = soup.find('h1', class_="OtoDetailT").get_text(strip=True)
-        articles['title'] = title
+        title = soup.find('h1', class_="OtoDetailT")
+        articles['title'] = title.get_text(strip=True) if title else ''
 
         #source
         articles['source'] = 'otosia'

@@ -13,12 +13,13 @@ import unicodedata
 import mysql.connector
 
 class Sindonews:
-    def getAllBerita(self, details, page, cat_link, offset=0, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
+    def getAllBerita(self, details, page, cat_link, offset, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
         """
         Untuk mengambil seluruh url
         link pada indeks category tertentu
         date format : YYYY/mm/dd
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
         url = "https://index.sindonews.com/index/"+ str(cat_link)+ "/" + str(offset)+ "?t="+ date
         print(url)
@@ -28,8 +29,8 @@ class Sindonews:
             response = requests.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
-            time.sleep(10)
-            details = self.getAllBerita(details, page, cat_link, offset+10, date)
+            time.sleep(5)
+            details = self.getAllBerita(details, page, cat_link, offset, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -45,18 +46,18 @@ class Sindonews:
 
         el_page = soup.find('div', class_="pagination")
         if el_page:
-            max_page = int(soup.find('div', class_="pagination").findAll('a')[-2]['data-ci-pagination-page'])
+            active_page = el_page.find('li', class_="active").get_text(strip=True)
+            max_page = el_page.findAll('a')[-1]['data-ci-pagination-page']
 
-            if page < max_page:
-                time.sleep(10)
+            if active_page != max_page:
+                time.sleep(5)
                 details = self.getAllBerita(details, page+1, cat_link, offset+10, date)
-
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
 
 
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
@@ -91,18 +92,19 @@ class Sindonews:
         pubdate = soup.find('time').get_text(strip=True)
         pubdate = pubdate.strip(' \t\n\r')
         pubdate = pubdate.replace(' WIB','')
+        pubdate = pubdate.replace("Jum'at", "Jumat")
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y - %H:%M"), "%Y-%m-%d %H:%M:%S")
 
         #extract author
-        reporter = soup.find('div', class_="reporter")
-        author = reporter.find('p', class_="author").find('a').get_text(strip=True).strip(' ')
-        articles['author'] = author
+        # reporter = soup.find('div', class_="reporter")
+        author = soup.find('p', class_="author")
+        articles['author'] = author.find('a').get_text(strip=True) if author else ''
 
         #extract title
-        title = soup.find('div', class_="article").find('h1').get_text(strip=True)
-        if ("foto" in title.lower()) or  "video" in title.lower():
-            return False
-        articles['title'] = title
+        title = soup.find('div', class_="article")
+        # if ("foto" in title.lower()) or  "video" in title.lower():
+        #     return False
+        articles['title'] = title.find('h1').get_text(strip=True) if title else ''
 
         #source
         articles['source'] = 'Sindonews'
@@ -111,13 +113,12 @@ class Sindonews:
         articles['comments'] = 0
 
         #extract tags
-        #tags = soup.findAll('span', class_="tags--snippet__name")
-        #tags = ','.join([x.get_text(strip=True) for x in tags])
-        #articles['tags'] = tags
+        tags = soup.find('div', class_='tag-list')
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags]) if tags else ''
 
         #extract images
-        image = soup.find('div', class_="article").find('img')['src']
-        articles['image'] = image
+        image = soup.find('div', class_="article").find('img')
+        articles['images'] = image['src'] if image else ''
 
         #hapus link sisip image
         for link in article.findAll('img'):
