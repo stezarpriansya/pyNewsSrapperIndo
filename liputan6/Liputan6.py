@@ -37,26 +37,27 @@ class Liputan6:
         soup = BeautifulSoup(html, "html5lib")
 
         contentDiv = soup.find('div', class_="articles--list articles--list_rows")
-        if contentDiv:
-            for post in contentDiv.findAll('figure'):
-                link = [post.find('a', href=True)['href'], category]
-                detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    details.append(detail)
+        flag = True
+        for post in contentDiv.findAll('figure'):
+            link = [post.find('a', href=True)['href'], category]
+            detail = self.getDetailBerita(link)
+            if self.insertDB(con, detail):
+                details.append(detail)
 
-        el_page = soup.find('div', class_="simple-pagination__container")
-        if el_page:
-            a_page = el_page.find('ul').findAll('li', class_="simple-pagination__page-number")[-1].find('span')
-            if el_page.find('ul').findAll('li', class_="simple-pagination__page-number")[-1].find('span', class_="simple-pagination__page-number-link simple-pagination__page-number-link_active"):
-                max_page = page
-            else:
-                max_page = el_page.find('ul').findAll('li', class_="simple-pagination__page-number")[-1]
-                max_page = int(max_page['data-page'].replace('\n', '').strip(' '))
+        if flag:
+            el_page = soup.find('div', class_="simple-pagination__container")
+            if el_page:
+                a_page = el_page.find('ul').findAll('li', class_="simple-pagination__page-number")[-1].find('span')
+                if el_page.find('ul').findAll('li', class_="simple-pagination__page-number")[-1].find('span', class_="simple-pagination__page-number-link simple-pagination__page-number-link_active"):
+                    max_page = page
+                else:
+                    max_page = el_page.find('ul').findAll('li', class_="simple-pagination__page-number")[-1]
+                    max_page = int(max_page['data-page'].replace('\n', '').strip(' '))
 
-            if page < max_page:
-                time.sleep(5)
-                details = self.getAllBerita(details, page+1, cat_link, category, date)
-
+                if page < max_page:
+                    time.sleep(5)
+                    details = self.getAllBerita(details, page+1, cat_link, category, date)
+        con.close()
         return details
 
     def getDetailBerita(self, link):
@@ -71,20 +72,20 @@ class Liputan6:
         soup = BeautifulSoup(html, "html5lib")
 
         #articleid
-        articles['id'] = int(soup.find('article', class_='hentry main read-page--core-article')['data-article-id'])
+        article_id = soup.find('article', class_='hentry main read-page--core-article')
+        articles['id'] = int(article_id['data-article-id']) if article_id else ''
 
-        #extract subcategory from breadcrumb
-        #bc = soup.find('ul', class_="breadcrumb__wrap")
-        #if not bc:
-        #    return False
+        #extract title
+        title = soup.find('meta', attrs={"property":"og:title"})['content']
+        articles['title'] = title
+        if ("foto:" in title.lower()) or  "video:" in title.lower():
+            return False
 
         bc = soup.find('ul', class_="read-page--breadcrumb")
         if not bc:
             return False
         cat = bc.findAll('a')[-2].get_text(strip=True)
         sub = bc.findAll('a')[-1].get_text(strip=True)
-        if ("foto" in sub.lower()) or  "video" in sub.lower():
-            return False
 
         #category
         articles['category'] = cat
@@ -107,10 +108,6 @@ class Liputan6:
         author = soup.find('a', class_="read-page--header--author__link url fn").find('span', class_="read-page--header--author__name fn").get_text(strip=True)
         articles['author'] = author
 
-        #extract title
-        title = soup.find('header', class_="read-page--header").find('h1').get_text(strip=True)
-        articles['title'] = title
-
         #source
         articles['source'] = 'Liputan6'
 
@@ -124,14 +121,13 @@ class Liputan6:
         articles['tags'] = ','.join([x.get_text(strip=True) for x in tags]) if tags else ''
 
         #extract images
-        image = soup.find('picture', class_="read-page--photo-gallery--item__picture").find('img')['src']
-        articles['images'] = image
+        image = soup.find('picture', class_="read-page--photo-gallery--item__picture")
+        articles['images'] = image.find('img')['src'] if image else ''
 
 
         #hapus link sisip
         for link in article.findAll('div', class_="baca-juga"):
             link.decompose()
-
 
         #hapus video sisip
         #         for tag in detail.findAll('div', class_="detail_tag"):
