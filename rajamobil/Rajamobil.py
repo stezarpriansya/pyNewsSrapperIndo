@@ -52,8 +52,9 @@ class Rajamobil:
                 break
             else:
                 detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    details.append(detail)
+                if detail:
+                    if self.insertDB(con, detail):
+                        details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="page-nav td-pb-padding-side")
@@ -64,7 +65,7 @@ class Rajamobil:
                     time.sleep(10)
                     details = self.getAllBerita(details, page+1, cat, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """
@@ -75,9 +76,9 @@ class Rajamobil:
         #link
         url = link[0]
         response = requests.get(url)
-        html = response.text
+        html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
-        soup = BeautifulSoup(html, "html5lib")
+        soup = BeautifulSoup(html2, "html5lib")
 
         #category
         articles['category'] = 'Otomotif'
@@ -88,16 +89,21 @@ class Rajamobil:
         article = soup.find('div', class_="td-pb-span8 td-main-content")
 
         #extract date
-        pubdate = soup.find('meta', {'property':'article:published_time'})['content']
+        pubdate = soup.find('meta', {'property':'article:published_time'})
+        pubdate = pubdate['content'] if pubdate else '1970-01-01T00:00:00+00:00'
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = soup.find('input', {'id':'comment_post_ID'}).get('value')
+
+        id = soup.find('input', {'id':'comment_post_ID'})
+        articles['id'] = id.get('value') if id else int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
 
         #extract author
-        articles['author'] = article.find('span', {'class': 'blue-clr text-right full-width display-ib'}).get_text(strip=True)
+        author = article.find('span', {'class': 'blue-clr text-right full-width display-ib'})
+        articles['author'] = author.get_text(strip=True)
 
         #extract title
-        articles['title'] = soup.find('div', {'class': 'td-author-by'}).find('a').get_text(strip=True).strip(' \t\n\r')
+        title = soup.find('div', {'class': 'td-author-by'}).find('a')
+        articles['title'] = title.get_text(strip=True).strip(' \t\n\r')
 
         #source
         articles['source'] = 'rajamobil'
@@ -107,10 +113,11 @@ class Rajamobil:
 
         #extract tags
         tags = article.findAll('meta', {"property":"article:tag"})
-        articles['tags'] = ','.join([x['content'] for x in tags])
+        articles['tags'] = ','.join([x['content'] for x in tags]) if tags else ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'property':'og:image'})['content']
+        images = soup.find("meta", attrs={'property':'og:image'})
+        articles['images'] = images['content']
 
         #extract detail
         detail = article.find('div', attrs={"class":"td-post-content"})
