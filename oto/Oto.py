@@ -77,14 +77,17 @@ class Oto:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
 
-        #extract subcategory from breadcrumb
-        bc = soup.find('ul', class_="breadcrumb")
-        if not bc:
+        #extract title
+        title = soup.find('article', class_="newslistouter container-base").find('h1').get_text(strip=True)
+        articles['title'] = title if title else ''
+        if ("foto:" in title.lower()) or  "video:" in title.lower():
             return False
 
+        #extract subcategory from breadcrumb
+        bc = soup.find('ul', class_="breadcrumb")
         sub = bc.findAll('li')[-2].get_text(strip=True)
 
-        if ("foto" in sub.lower()) or  "video" in sub.lower():
+        if not bc:
             return False
 
         #category
@@ -112,10 +115,6 @@ class Oto:
         #extract editor
         author = soup.find('div', class_="publish-cont").find('a').get_text(strip=True)
         articles['author'] = author
-
-        #extract title
-        title = soup.find('article', class_="newslistouter container-base").find('h1').get_text(strip=True)
-        articles['title'] = title if title else ''
 
         #source
         articles['source'] = 'oto'
@@ -160,6 +159,7 @@ class Oto:
         Untuk memasukkan berita ke DB
         """
         print("Insert berita ", articles['title'])
+
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
