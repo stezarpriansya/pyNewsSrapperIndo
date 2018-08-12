@@ -22,7 +22,7 @@ class Otomart:
         date format : YYYY/mm/dd
         category : berita-mobil, artikel-mobil, uncategorized
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         url = "https://www.otomart.id/berita/page/"+str(page)
         print(url)
@@ -44,18 +44,21 @@ class Otomart:
         for post in indeks:
             link = [post.find('a', href=True)['href'], '']
             #check if there are a post with same url
+            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
             # cursor = con.cursor()
             # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
             # cursor.execute(query)
             # result = cursor.fetchone()
             # cursor.close()
+            # con.close()
             # if(result[0] > 0):
             #     flag = False
             #     break
             # else:
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                details.append(detail)
+            if detail:
+                if self.insertDB(detail):
+                    details.append(detail)
         if flag:
             el_page = soup.find('div', class_="wp-pagenavi")
             if el_page:
@@ -66,7 +69,7 @@ class Otomart:
                     time.sleep(5)
                     details = self.getAllBerita(details, page+1,date)
 
-        con.close()
+
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -147,12 +150,12 @@ class Otomart:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
-
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -164,8 +167,10 @@ class Otomart:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

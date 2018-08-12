@@ -22,7 +22,7 @@ class Housingestate:
         category = all
         date = Y/m/d
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         date2 = datetime.strptime(date, '%Y/%m/%d')
         url = "http://housingestate.id/wp-admin/admin-ajax.php?action=alm_query_posts&order=DESC&orderby=date&month="+str(date2.date().month)+"&year="+str(date2.date().year)
@@ -42,11 +42,13 @@ class Housingestate:
         for post in indeks:
             link = [post.find('a', href=True)['href'], ""]
             #check if there are a post with same url
-            cursor = con.cursor()
-            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            cursor.close()
+            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            # cursor = con.cursor()
+            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            # cursor.execute(query)
+            # result = cursor.fetchone()
+            # cursor.close()
+            # con.close()
             #comment sementara
             # if(result[0] > 0):
             #     flag = False
@@ -58,7 +60,7 @@ class Housingestate:
                     # print("Insert berita ", articles['title'])
                     details.append(detail)
 
-        con.close()
+
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -143,11 +145,12 @@ class Housingestate:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
-        print(articles['title'])
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+        print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -159,8 +162,10 @@ class Housingestate:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

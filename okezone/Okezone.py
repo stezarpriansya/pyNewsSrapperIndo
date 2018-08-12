@@ -21,7 +21,7 @@ class Okezone:
         link pada indeks category tertentu
         date format : dd/mm/YYYY
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         url = "https://index.okezone.com/bydate/index/"+date+"/"+str(offset)+"/"
         print(url)
@@ -42,7 +42,7 @@ class Okezone:
             link = [post.find('a', href=True)['href'], ""]
             detail = self.getDetailBerita(link)
             if detail:
-                if self.insertDB(con, detail):
+                if self.insertDB(detail):
                     details.append(detail)
 
         el_page = soup.find('div', class_="pagination-indexs")
@@ -52,7 +52,7 @@ class Okezone:
             if page < max_page:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, page*15, date)
-        con.close()
+
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -165,12 +165,12 @@ class Okezone:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
-
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -182,8 +182,10 @@ class Okezone:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

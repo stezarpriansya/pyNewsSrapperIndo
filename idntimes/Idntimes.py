@@ -21,7 +21,7 @@ class Idntimes:
         link pada indeks category tertentu
         date format : YYYY-mm-dd
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         url = "https://www.idntimes.com/ajax/index?category="+cat_link+"&type=all&page="+str(page)+"&date="+date
         print(url)
@@ -43,11 +43,11 @@ class Idntimes:
                 link = [post.find('a', href=True)['href'], cat_link]
                 detail = self.getDetailBerita(link)
                 if detail:
-                    if self.insertDB(con, detail):
+                    if self.insertDB(detail):
                         details.append(detail)
             time.sleep(10)
             details = self.getAllBerita(details, cat_link, page+1, date)
-        con.close()
+
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -133,12 +133,12 @@ class Idntimes:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
-
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -150,8 +150,10 @@ class Idntimes:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

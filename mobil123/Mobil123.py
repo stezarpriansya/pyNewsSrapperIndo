@@ -22,7 +22,7 @@ class Mobil123:
         date format : YYYY/mm/dd
         category : berita-otomotif, mobil-baru, review, panduan-pembeli,
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         url = "https://www.mobil123.com/berita/terbaru?page_number="+str(page)
         print(url)
@@ -43,18 +43,21 @@ class Mobil123:
         for post in indeks:
             link = [post.find('a', href=True)['href'], '']
             #check if there are a post with same url
-            cursor = con.cursor()
-            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            cursor.close()
+            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            # cursor = con.cursor()
+            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            # cursor.execute(query)
+            # result = cursor.fetchone()
+            # cursor.close()
+            # con.close()
             # if(result[0] > 0):
             #     flag = False
             #     break
             # else:
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                details.append(detail)
+            if detail:
+                if self.insertDB(detail):
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
@@ -66,7 +69,7 @@ class Mobil123:
                     time.sleep(5)
                     details = self.getAllBerita(details, page+1, date)
 
-        con.close()
+
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -146,10 +149,11 @@ class Mobil123:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
@@ -162,8 +166,10 @@ class Mobil123:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

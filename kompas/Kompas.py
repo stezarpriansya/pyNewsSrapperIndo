@@ -26,7 +26,7 @@ class Kompas:
         link pada indeks category tertentu
         date format : YYYY-mm-dd
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         url = "https://indeks.kompas.com/"+cat_link+"/"+date+"/"+str(page)
         print(url)
@@ -47,8 +47,9 @@ class Kompas:
         for post in contentDiv:
             link = [post.find('a', href=True)['href'], category]
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                details.append(detail)
+            if detail:
+                if self.insertDB(detail):
+                    details.append(detail)
 
         el_page =  soup.find('div', class_="paging__wrap clearfix")
         if el_page:
@@ -139,12 +140,12 @@ class Kompas:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
-
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -156,8 +157,10 @@ class Kompas:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

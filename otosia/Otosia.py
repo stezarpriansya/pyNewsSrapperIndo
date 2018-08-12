@@ -22,7 +22,7 @@ class Otosia:
         date format : YYYY/mm/dd
         category : berita, tips, lifetyle, selebriti, komunitas, galeri
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         if page==1:
             url = "https://www.otosia.com/"+cat+"/index.html"
@@ -46,18 +46,21 @@ class Otosia:
         for post in indeks:
             link = ["https://www.otosia.com"+ post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
-            cursor = con.cursor()
-            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            cursor.close()
+            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            # cursor = con.cursor()
+            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            # cursor.execute(query)
+            # result = cursor.fetchone()
+            # cursor.close()
+            # con.close()
             # if(result[0] > 0):
             #     flag = False
             #     break
             # else:
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                details.append(detail)
+            if detail:
+                if self.insertDB(detail):
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="mphold-g")
@@ -69,7 +72,7 @@ class Otosia:
                     time.sleep(5)
                     details = self.getAllBerita(details, active_page+1, cat, date)
 
-        con.close()
+
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -154,12 +157,12 @@ class Otosia:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
-
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -171,8 +174,10 @@ class Otosia:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

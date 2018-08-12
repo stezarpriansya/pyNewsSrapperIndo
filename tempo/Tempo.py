@@ -24,7 +24,7 @@ class Tempo:
     #     print("page ", page)
         url = "https://www.tempo.co/indeks/"+date
         print(url)
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         # Make the request and create the response object: response
         try:
             response = requests.get(url)
@@ -43,10 +43,10 @@ class Tempo:
                 link = [post.find('a', {'class':'col'}, href=True)['href'], ""]
                 detail = self.getDetailBerita(link)
                 if detail:
-                    if self.insertDB(con, detail):
+                    if self.insertDB(detail):
                         details.append(detail)
     #         links = getIndeksLink(links, date)
-        con.close()
+
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -129,12 +129,12 @@ class Tempo:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
-
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -146,8 +146,10 @@ class Tempo:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

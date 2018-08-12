@@ -22,7 +22,7 @@ class Cintamobil:
         category = berita-mobil, tips-trik
         date = Y/m/d
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         url = "https://cintamobil.com/"+cat+"/"+cat+"/p"+str(page)
         print(url)
@@ -42,11 +42,13 @@ class Cintamobil:
         for post in indeks:
             link = ["https://cintamobil.com"+post.find('a', href=True)['href'], cat.replace('-', '')]
             #check if there are a post with same url
-            cursor = con.cursor()
-            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            cursor.close()
+            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            # cursor = con.cursor()
+            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            # cursor.execute(query)
+            # result = cursor.fetchone()
+            # cursor.close()
+            # con.close()
             #comment sementara
             # if(result[0] > 0):
             #     flag = False
@@ -54,7 +56,7 @@ class Cintamobil:
             # else:
             detail = self.getDetailBerita(link)
             if detail:
-                if self.insertDB(con, detail):
+                if self.insertDB(detail):
                     details.append(detail)
 
         if flag:
@@ -65,7 +67,7 @@ class Cintamobil:
                 if page < max_page:
                     time.sleep(5)
                     details = self.getAllBerita(details, page+1, cat, date)
-        con.close()
+
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -150,10 +152,11 @@ class Cintamobil:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
@@ -166,8 +169,10 @@ class Cintamobil:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

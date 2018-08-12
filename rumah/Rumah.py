@@ -22,7 +22,7 @@ class Rumah:
         category = berita
         date = Y/m/d
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         url = "https://www.rumah.com/berita-properti/category/"+cat+"?page="+str(page)
         print(url)
@@ -42,11 +42,13 @@ class Rumah:
         for post in indeks:
             link = ["https://www.rumah.com"+post.find('a', href=True)['href'], ""]
             #check if there are a post with same url
+            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
             cursor = con.cursor()
             query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
             cursor.execute(query)
             result = cursor.fetchone()
             cursor.close()
+            con.close()
             if(result[0] > 0):
                 flag = False
                 break
@@ -64,7 +66,7 @@ class Rumah:
                 if str(page) != max_page:
                     time.sleep(10)
                     details = self.getAllBerita(details, page+1, cat, date)
-        con.close()
+
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -161,12 +163,12 @@ class Rumah:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
-
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -178,8 +180,10 @@ class Rumah:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

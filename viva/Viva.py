@@ -42,7 +42,7 @@ class Viva:
                     print('masukan link ', link[0])
                     detail = self.getDetailBerita(link)
                     if detail:
-                        if self.insertDB(con, detail):
+                        if self.insertDB(detail):
                             details.append(detail)
 
                 if date_max == date:
@@ -60,7 +60,7 @@ class Viva:
         date format : YYYY-mm-dd
         """
         url = 'https://www.viva.co.id/indeks/'
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         #scarp with selenium
         options = Options()
         options.add_argument('--headless')
@@ -169,12 +169,12 @@ class Viva:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
-
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -186,8 +186,10 @@ class Viva:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

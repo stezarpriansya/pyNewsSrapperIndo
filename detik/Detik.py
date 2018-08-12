@@ -19,7 +19,7 @@ class Detik:
         link pada indeks category tertentu
         date format : dd/mm/YYYY
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         if cat_link == 'news':
             url = "https://"+cat_link+".detik.com/indeks/all/"+str(page)+"?date="+date
@@ -43,7 +43,7 @@ class Detik:
             link = [post.find('a', href=True)['href'], category]
             detail = self.getDetailBerita(link)
             if detail:
-                if self.insertDB(con, detail):
+                if self.insertDB(detail):
                     details.append(detail)
 
         el_page = soup.find('div', class_="paging paging2")
@@ -53,7 +53,7 @@ class Detik:
             if page < max_page:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, cat_link, category, date)
-        con.close()
+
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -147,12 +147,12 @@ class Detik:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
-
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -164,8 +164,10 @@ class Detik:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

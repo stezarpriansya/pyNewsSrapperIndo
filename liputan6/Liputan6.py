@@ -19,7 +19,7 @@ class Liputan6:
         link pada indeks category tertentu
         date format : YYYY/mm/dd
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         url = "https://www.liputan6.com/"+cat_link+"/indeks/"+date+"?page="+str(page)
         print(url)
@@ -37,36 +37,14 @@ class Liputan6:
         soup = BeautifulSoup(html, "html5lib")
 
         contentDiv = soup.find('div', class_="articles--list articles--list_rows")
-<<<<<<< HEAD
-        flag = True
+
         for post in contentDiv.findAll('figure'):
             link = [post.find('a', href=True)['href'], category]
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                details.append(detail)
-
-        if flag:
-            el_page = soup.find('div', class_="simple-pagination__container")
-            if el_page:
-                a_page = el_page.find('ul').findAll('li', class_="simple-pagination__page-number")[-1].find('span')
-                if el_page.find('ul').findAll('li', class_="simple-pagination__page-number")[-1].find('span', class_="simple-pagination__page-number-link simple-pagination__page-number-link_active"):
-                    max_page = page
-                else:
-                    max_page = el_page.find('ul').findAll('li', class_="simple-pagination__page-number")[-1]
-                    max_page = int(max_page['data-page'].replace('\n', '').strip(' '))
-
-                if page < max_page:
-                    time.sleep(5)
-                    details = self.getAllBerita(details, page+1, cat_link, category, date)
-        con.close()
-        return details
-=======
-        if contentDiv:
-            for post in contentDiv.findAll('figure'):
-                link = [post.find('a', href=True)['href'], category]
-                detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
+            if detail:
+                if self.insertDB(detail):
                     details.append(detail)
+
 
         el_page = soup.find('div', class_="simple-pagination__container")
         if el_page:
@@ -82,7 +60,6 @@ class Liputan6:
                 details = self.getAllBerita(details, page+1, cat_link, category, date)
 
         return 'berhasil ambil semua berita'
->>>>>>> 58d5bb34bfa188196352e0e808c84262d6ddd3e2
 
     def getDetailBerita(self, link):
 
@@ -173,12 +150,12 @@ class Liputan6:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
-
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
         cursor.execute(query)
@@ -190,8 +167,10 @@ class Liputan6:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False

@@ -21,7 +21,7 @@ class Antara:
         link pada indeks category tertentu
         date format : dd-mm-YYYY
         """
-        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+
         print("page ", page)
         url = "https://www.antaranews.com/search/%20/"+date+"/"+date+"/"+str(page)
         print(url)
@@ -42,7 +42,7 @@ class Antara:
             link = [post.find('a', href=True)['href'], ""]
             detail = self.getDetailBerita(link)
             if detail:
-                if self.insertDB(con, detail):
+                if self.insertDB(detail):
                     # print("Insert berita ", articles['title'])
                     details.append(detail)
 
@@ -54,7 +54,6 @@ class Antara:
             if last_page != active_page:
                 time.sleep(10)
                 details = self.getAllBerita(details, int(active_page)+1, date)
-        con.close()
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
@@ -67,7 +66,7 @@ class Antara:
         url = link[0]
         if ('video' in url.split('/')) or ('foto' in url.split('/')):
             return False
-        
+
         response = requests.get(url)
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -146,12 +145,11 @@ class Antara:
 
         return articles
 
-    def insertDB(self, con, articles):
+    def insertDB(self, articles):
         """
         Untuk memasukkan berita ke DB
         """
-        if articles==False:
-            return False
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
@@ -164,8 +162,10 @@ class Antara:
             con.commit()
             print('masuk')
             cursor.close()
+            con.close()
             return True
         else:
             cursor.close()
             print('salah2')
+            con.close()
             return False
