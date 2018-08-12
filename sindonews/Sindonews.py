@@ -52,9 +52,14 @@ class Sindonews:
             if active_page != max_page:
                 time.sleep(5)
                 details = self.getAllBerita(details, page+1, cat_link, offset+10, date)
+<<<<<<< HEAD
             else:
                 print("selesai")
         return details
+=======
+
+        return 'berhasil ambil semua berita'
+>>>>>>> 58d5bb34bfa188196352e0e808c84262d6ddd3e2
 
     def getDetailBerita(self, link):
 
