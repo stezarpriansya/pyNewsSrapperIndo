@@ -62,7 +62,7 @@ class Kompas:
                 time.sleep(20)
                 details = self.getAllBerita(details, page+1, cat_link, category, date)
 
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
 

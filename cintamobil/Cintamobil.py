@@ -66,7 +66,7 @@ class Cintamobil:
                     time.sleep(5)
                     details = self.getAllBerita(details, page+1, cat, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """

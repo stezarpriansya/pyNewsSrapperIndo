@@ -51,7 +51,7 @@ class Carmudi:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """

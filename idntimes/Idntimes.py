@@ -47,7 +47,7 @@ class Idntimes:
             time.sleep(10)
             details = self.getAllBerita(details, cat_link, page+1, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """

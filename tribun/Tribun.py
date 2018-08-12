@@ -70,7 +70,7 @@ class Tribun:
                     details = self.getAllBerita(details, page+1, date)
 
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """

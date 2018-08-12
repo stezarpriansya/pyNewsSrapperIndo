@@ -58,7 +58,7 @@ class Tirto:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, date)
 
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         time.sleep(10)

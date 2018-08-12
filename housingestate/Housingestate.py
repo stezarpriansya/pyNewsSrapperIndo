@@ -59,7 +59,7 @@ class Housingestate:
                     details.append(detail)
 
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """

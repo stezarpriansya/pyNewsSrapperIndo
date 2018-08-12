@@ -70,7 +70,7 @@ class Otosia:
                     details = self.getAllBerita(details, active_page+1, cat, date)
 
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """

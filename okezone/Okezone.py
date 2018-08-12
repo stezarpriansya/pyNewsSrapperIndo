@@ -53,7 +53,7 @@ class Okezone:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, page*15, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """

@@ -47,7 +47,7 @@ class Tempo:
                         details.append(detail)
     #         links = getIndeksLink(links, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """

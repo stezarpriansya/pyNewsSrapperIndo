@@ -55,7 +55,7 @@ class Antara:
                 time.sleep(10)
                 details = self.getAllBerita(details, int(active_page)+1, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """

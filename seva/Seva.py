@@ -63,7 +63,7 @@ class Seva:
                 time.sleep(10)
                 details = self.getAllBerita(details, page+1, cat_link, category)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """

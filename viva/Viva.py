@@ -76,7 +76,7 @@ class Viva:
 
         details = self.getLoadMorePost(con, details, driver, date)
 
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """
