@@ -41,12 +41,13 @@ class Idntimes:
             for post in indeks:
                 link = [post.find('a', href=True)['href'], cat_link]
                 detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    details.append(detail)
+                if detail:
+                    if self.insertDB(con, detail):
+                        details.append(detail)
             time.sleep(10)
             details = self.getAllBerita(details, cat_link, page+1, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """
@@ -65,8 +66,11 @@ class Idntimes:
         #extract scrip json ld
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
 #         print(len(scripts_all))
-        scripts = json.loads(scripts_all[-2].get_text(strip=True))
-        scripts2 = json.loads(scripts_all[-1].get_text(strip=True))
+        if scripts2:
+            scripts = json.loads(scripts_all[-2].get_text(strip=True))
+            scripts2 = json.loads(scripts_all[-1].get_text(strip=True))
+        else:
+            return False
 
         #category
         articles['category'] = scripts2['itemListElement'][0]['item']['name']
@@ -96,8 +100,8 @@ class Idntimes:
         articles['comments'] = 0
 
         #extract tags
-        tags = article.find('div', class_="content-post-topic").findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
+        tags = article.find('div', class_="content-post-topic")
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
         articles['images'] = scripts['image']['url']
