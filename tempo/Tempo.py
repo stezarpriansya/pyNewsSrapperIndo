@@ -42,12 +42,12 @@ class Tempo:
             for post in indeks:
                 link = [post.find('a', {'class':'col'}, href=True)['href'], ""]
                 detail = self.getDetailBerita(link)
-                if self.insertDB(con, detail):
-                    print("Insert berita ", articles['title'])
-                    details.append(detail)
+                if detail:
+                    if self.insertDB(con, detail):
+                        details.append(detail)
     #         links = getIndeksLink(links, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """
@@ -66,9 +66,11 @@ class Tempo:
         #extract scrip json ld
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
 #         print(len(scripts_all))
-        scripts = json.loads(scripts_all[0].get_text(strip=True))
-        scripts2 = json.loads(scripts_all[1].get_text(strip=True))
-
+        if scripts_all:
+            scripts = json.loads(scripts_all[0].get_text(strip=True))
+            scripts2 = json.loads(scripts_all[1].get_text(strip=True))
+        else:
+            return False
         #category
         articles['category'] = scripts2['itemListElement'][-2]['item']['name']
         articles['subcategory'] = scripts2['itemListElement'][-1]['item']['name']
@@ -81,7 +83,9 @@ class Tempo:
         pubdate = scripts['datePublished']
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
-        articles['id'] = int(soup.find('meta', {'property':"dable:item_id"})['content'])
+
+        id = soup.find('meta', {'property':"dable:item_id"})
+        articles['id'] = int(id['content']) if id else int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
 
         #extract author
         articles['author'] = scripts['editor']['name']
@@ -97,8 +101,8 @@ class Tempo:
         articles['comments'] = 0
 
         #extract tags
-        tags = article.find('div', class_="tags clearfix").findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags])
+        tags = article.find('div', class_="tags clearfix")
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
         articles['images'] = scripts['image']['url']
