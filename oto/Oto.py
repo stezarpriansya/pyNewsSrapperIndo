@@ -39,7 +39,7 @@ class Oto:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('li', class_="card")
-        flag = True
+        # flag = True
         for post in indeks:
             link = [post.find('a', href=True)['href'], "cat"]
             #check if there are a post with same url
@@ -58,12 +58,12 @@ class Oto:
             if detail:
                 if self.insertDB(detail):
                     details.append(detail)
-        if flag:
-            max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').get_text(strip=True)))/12)
-            # max_page = 2
-            if page <= max_page:
-                time.sleep(5)
-                details = self.getAllBerita(details, page+1, cat, date)
+        # if flag:
+        max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').get_text(strip=True)))/12)
+        # max_page = 2
+        if page <= max_page:
+            time.sleep(5)
+            details = self.getAllBerita(details, page+1, cat, date)
         con.close
         return 'berhasil ambil semua berita'
 
@@ -81,17 +81,17 @@ class Oto:
         soup = BeautifulSoup(html, "html5lib")
 
         #extract title
-        title = soup.find('article', class_="newslistouter container-base").find('h1').get_text(strip=True)
-        articles['title'] = title if title else ''
+        find_title = soup.find('article', class_="newslistouter container-base")
+        title = find_title.find('h1').get_text(strip=True) if find_title else ''
+        articles['title'] = title
         if ("foto:" in title.lower()) or  "video:" in title.lower():
             return False
 
         #extract subcategory from breadcrumb
         bc = soup.find('ul', class_="breadcrumb")
-        sub = bc.findAll('li')[-2].get_text(strip=True)
-
         if not bc:
             return False
+        sub = bc.findAll('li')[-2].get_text(strip=True) if bc else ''
 
         #category
         articles['category'] = 'Otomotif'
