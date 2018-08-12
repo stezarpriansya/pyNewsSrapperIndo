@@ -21,6 +21,7 @@ class Tirto:
         link pada indeks category tertentu
         date format : YYYY/mm/dd
         """
+        con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
         print("page ", page)
         url = "https://tirto.id/indeks/"+str(page)+"?date="+date
         print(url)
@@ -49,14 +50,14 @@ class Tirto:
                 detail = self.getDetailBerita(link)
                 if self.insertDB(con, detail):
                     details.append(detail)
+        if flag:
+            el_page = soup.find('ul', class_="custom-pagination p-0 text-center mb-5 col-10 offset-1")
+            if el_page:
+                max_page = el_page.findAll('a')[-2].get_text(strip=True)
 
-        el_page = soup.find('ul', class_="custom-pagination p-0 text-center mb-5 col-10 offset-1")
-        if el_page:
-            max_page = int(el_page.findAll('a')[-2].get_text(strip=True))
-
-            if page < max_page:
-                time.sleep(10)
-                details = self.getAllBerita(details, page+1, date)
+                if page != max_page:
+                    time.sleep(10)
+                    details = self.getAllBerita(details, page+1, date)
 
         return details
 
@@ -91,7 +92,8 @@ class Tirto:
 
         #extract date
         author_pubdate = soup.find('div', class_="col-md-6").get_text(strip=True).replace('Oleh: ','')
-        author_pubdate = author_pubdate.split(' - ')
+        author_pubdate = author_pubdate.strip(' ')
+        author_pubdate = author_pubdate.split('- ')
         pubdate = author_pubdate[1]
         pubdate = pubdate.strip(' ')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d %B %Y"), "%Y-%m-%d %H:%M:%S")
@@ -106,8 +108,8 @@ class Tirto:
 
         #extract title
         title = soup.find('h1', class_="news-detail-title text-center animated zoomInUp my-3").get_text(strip=True)
-        if ("foto" in title.lower()) or  "video" in title.lower():
-            return False
+        # if ("foto" in title.lower()) or  "video" in title.lower():
+        #     return False
         articles['title'] = title
 
         #source
@@ -121,8 +123,8 @@ class Tirto:
         articles['tags'] = tags
 
         #extract images
-        image = soup.findAll('meta', attrs={"name":"thumbnail"})[0]['content']
-        articles['image'] = image
+        image = soup.findAll('meta', attrs={"name":"thumbnail"})
+        articles['images'] = image[0]['content'] if image else ''
 
         #hapus link sisip
         for link in article.findAll('div'):
