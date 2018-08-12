@@ -52,8 +52,9 @@ class Otodriver:
             #     break
             # else:
             detail = self.getDetailBerita(link)
-            if self.insertDB(con, detail):
-                details.append(detail)
+            if detail:
+                if self.insertDB(con, detail):
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
@@ -64,7 +65,7 @@ class Otodriver:
                     time.sleep(5)
                     details = self.getAllBerita(details, page+1, cat, date)
         con.close()
-        return details
+        return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         """
@@ -88,16 +89,19 @@ class Otodriver:
         article = soup.find('div', class_="left-content")
 
         #extract date
-        pubdate = article.find('meta', {'itemprop':'datePublished'})['content']
+        pubdate = article.find('meta', {'itemprop':'datePublished'})
+        pubdate = pubdate['content'] if pubdate else '1970-01-01 00:00:00'
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S").timestamp()) + len(url)
 
         #extract author
-        articles['author'] = soup.find('meta', {'property': 'article:author'})['content']
+        author = soup.find('meta', {'property': 'article:author'})
+        articles['author'] = author['content'] if author else ''
 
         #extract title
-        articles['title'] = soup.find('meta', {'property': 'og:title'})['content']
+        title = soup.find('meta', {'property': 'og:title'})
+        articles['title'] = title['content'] if title else ''
 
         #source
         articles['source'] = 'otodriver'
@@ -106,11 +110,12 @@ class Otodriver:
         articles['comments'] = 0
 
         #extract tags
-        tags = article.find('div', class_="post-meta").findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags])
+        tags = article.find('div', class_="post-meta")
+        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags.findAll('a')]) if tags else ''
 
         #extract images
-        articles['images'] = soup.find("meta", attrs={'property':'twitter:image'})['content']
+        images = soup.find("meta", attrs={'property':'twitter:image'})
+        articles['images'] = images['content'] if images else ''
 
         #extract detail
         detail = article.find('div', attrs={'class':'entry-content detail-content'})
