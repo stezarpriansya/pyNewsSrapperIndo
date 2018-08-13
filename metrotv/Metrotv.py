@@ -19,8 +19,16 @@ class Metrotv:
         Untuk mengambil seluruh url
         link pada indeks category tertentu
         date format : YYYY-mm-dd
+        cat_link :  internatiol
+                    ekonomi
+                    bola
+                    olahraga
+                    teknologi
+                    otomotif
+                    hiburan
+                    rona
         """
-
+        # dates = ['2018/07/30','2018/07/29','2018/07/28','2018/07/27','2018/07/26','2018/07/25']
         print("page ", page)
         url = "http://"+cat_link+".metrotvnews.com/index/"+date+"/"+ str(offset)
         print(url)
@@ -50,9 +58,11 @@ class Metrotv:
 
             if page < max_page:
                 time.sleep(5)
+                # cat_links = ['international', 'bola', 'olahraga', 'teknologi', 'hiburan','rona']
+                # for cat in range(len(cat_links)):
+                #     cat_link = cat_links[cat]
                 details = self.getAllBerita(details, page+1, offset+30, cat_link, category, date)
-
-        return 'berhasil ambil semua berita'
+            return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
         time.sleep(5)
