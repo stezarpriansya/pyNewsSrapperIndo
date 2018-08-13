@@ -37,7 +37,7 @@ class Detik:
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        contentDiv = soup.find('ul', attrs={'id':'indeks-container'})
+        contentDiv = soup.find('div', attrs={'class':'lf_content'})
         indeks = contentDiv.findAll('article')
         for post in indeks:
             link = [post.find('a', href=True)['href'], category]
@@ -128,8 +128,9 @@ class Detik:
             tag.decompose()
 
         #hapus all setelah clear fix
-        for det in detail.find('div', class_="clearfix mb20").findAllNext():
-            det.decompose()
+        if detail.find('div', class_="clearfix mb20"):
+            for det in detail.find('div', class_="clearfix mb20").findAllNext():
+                det.decompose()
 
         #hapus all script
         for script in detail.findAll('script'):
