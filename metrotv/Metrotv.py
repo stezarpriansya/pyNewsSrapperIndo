@@ -12,6 +12,7 @@ from requests.exceptions import ConnectionError
 import unicodedata
 import json
 import mysql.connector
+from datetime import datetime
 
 class Metrotv:
     def getAllBerita(self, details, page, offset, cat_link, category, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
@@ -95,13 +96,12 @@ class Metrotv:
         article = soup.find('div', class_="tru")
 
         #extract date
+        pubdate = soup.find('meta', attrs={'property':'og:updated_time'})['content']
+        pubdate = datetime.fromtimestamp(int(pubdate))
+        pubdate = datetime.strftime(pubdate,"%Y-%m-%d %H:%M:%S")
+
         pubdate_author = soup.find('div', class_='reg').text
         pubdate_author_split = pubdate_author.split(' \xa0\xa0 • \xa0\xa0 ')
-        pubdate = pubdate_author_split[1]
-        pubdate = pubdate.strip(' \t\n\r')
-        pubdate = pubdate.replace(' WIB','')
-        pubdate = pubdate.replace('Aug', 'Agt').replace('Juli', 'Jul').replace('Juni', 'Jun')
-        pubdate = datetime.strftime(datetime.strptime(pubdate, "%A, %d %b %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
         articles['pubdate'] = pubdate
 
         #extract author
@@ -138,10 +138,6 @@ class Metrotv:
         #hapus video sisip
         for tag in detail.findAll('iframe', class_="embedv"):
             tag.decompose()
-
-        #hapus all setelah clear fix
-        #for det in detail.find('div', class_="wfull fl rl"):
-        #    det.decompose()
 
         #hapus all script
         for script in detail.findAll('script'):
