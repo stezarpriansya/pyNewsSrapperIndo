@@ -34,9 +34,9 @@ class Carmudi:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         contentDiv = soup.find('div', class_="vw-loop vw-loop--medium vw-loop--medium-6 vw-loop--col-2")
-        indeks = contentDiv.findAll('a', class_="vw-post-box__read-more vw-button vw-button--small vw-button--accent")
+        indeks = contentDiv.findAll('a', class_="vw-post-box__read-more vw-button vw-button--small vw-button--accent", href=True)
         for post in indeks:
-            link = [post.find('a', href=True)['href'], ""]
+            link = [post['href'], ""]
             detail = self.getDetailBerita(link)
             if detail:
                 if self.insertDB(detail):
@@ -66,20 +66,14 @@ class Carmudi:
         soup = BeautifulSoup(html, "html5lib")
 
         #extract subcategory & category from breadcrumb
-        bc = soup.find('div', class_="vw-post-categories")
+        bc = soup.find('div', class_="vw-breadcrumb vw-breadcrumb-envirra")
         if not bc:
             return False
 
-        if len(bc.findAll('a')) > 2 :
-            cat = bc.findAll('a')[1].get_text(strip=True)
-            sub = bc.findAll('a')[2].get_text(strip=True)
-        else:
-            cat = bc.findAll('a')[1].get_text(strip=True)
-            sub = ''
-
-        articles['subcategory'] = sub
+        sub = bc.findAll('span', {'typeof':'v:Breadcrumb'})
+        articles['subcategory'] = sub[1].get_text(strip=True) if sub else ''
         #category
-        articles['category'] = cat
+        articles['category'] = 'Otomotif'
         articles['url'] = url
 
         article = soup.find('article', class_="vw-main-post")
@@ -107,10 +101,9 @@ class Carmudi:
 
         #extract comments count
         comments = soup.find('a', class_="vw-post-meta-icon vw-post-comment-count")
-        articles['comments'] = int(comments.strip(' \t\n\r') if comments else '0')
+        articles['comments'] = int(comments.get_text(strip=True).strip(' \t\n\r') if comments else '0')
 
         #extract tags
-        tags =
         tags = article.find('div', class_="vw-tag-links")
         articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 

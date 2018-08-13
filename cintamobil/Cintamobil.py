@@ -42,22 +42,22 @@ class Cintamobil:
         for post in indeks:
             link = ["https://cintamobil.com"+post.find('a', href=True)['href'], cat.replace('-', '')]
             #check if there are a post with same url
-            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            # cursor = con.cursor()
-            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            # cursor.execute(query)
-            # result = cursor.fetchone()
-            # cursor.close()
-            # con.close()
-            #comment sementara
-            # if(result[0] > 0):
-            #     flag = False
-            #     break
-            # else:
-            detail = self.getDetailBerita(link)
-            if detail:
-                if self.insertDB(detail):
-                    details.append(detail)
+            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            cursor = con.cursor()
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            cursor.close()
+            con.close()
+            # comment sementara
+            if(result[0] > 0):
+                flag = False
+                break
+            else:
+                detail = self.getDetailBerita(link)
+                if detail:
+                    if self.insertDB(detail):
+                        details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="paging pull-right")

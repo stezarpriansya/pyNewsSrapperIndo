@@ -171,9 +171,10 @@ class Gridoto:
         Untuk memasukkan berita ke DB
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-        print("Insert berita ", articles['title'])
+        print("Insert berita ", articles['url'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
+        print(query)
         cursor.execute(query)
         result = cursor.fetchone()
         if result[0] <= 0:

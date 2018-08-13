@@ -14,13 +14,14 @@ import time
 from requests.exceptions import ConnectionError
 import unicodedata
 import mysql.connector
-
+#VIVA MASOH ERROR, DI REVIEW LAGI
 class Viva:
-    def getLoadMorePost(self, con, links, driver, date):
+    def getLoadMorePost(self, links, driver, date):
         """
         Mengambil semua post dengan pagination berupa 'load more'
         dibatasi sesuai tanggal yang telah ditentukan
         """
+        #ERROR
         soup = BeautifulSoup(driver.page_source, 'html5lib')
         tes = soup.find('ul', attrs={'id': 'load_terbaru_content'})
         lel = re.sub(r'\n|\t|\b|\r|\s','',tes.findAll('script', attrs={"type":"text/javascript"})[-1].get_text(strip=True)).strip(' \t\n\r')
@@ -53,13 +54,14 @@ class Viva:
 
         return details
 
-    def getAllBerita(self, details, date=datetime.strftime(datetime.today(), '%Y-%m-%d')):
+    def getAllBerita(self, details, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
         Untuk mengambil seluruh url okezone
         link pada indeks category tertentu
         date format : YYYY-mm-dd
         """
-        url = 'https://www.viva.co.id/indeks/'
+        #ERROR
+        url = "https://www.viva.co.id/indeks/all/all/"+date+"?type=art"
 
         #scarp with selenium
         options = Options()
@@ -74,7 +76,7 @@ class Viva:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
 
-        details = self.getLoadMorePost(con, details, driver, date)
+        details = self.getLoadMorePost(details, driver, date)
 
         return 'berhasil ambil semua berita'
 
@@ -94,7 +96,8 @@ class Viva:
         #extract scrip json ld
         scripts = soup.findAll('script', attrs={'type':'application/ld+json'})
         if scripts:
-            scripts = json.loads(scripts[-1].get_text(strip=True))
+            scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts[-1].get_text(strip=True)))
+            scripts = json.loads(scripts)
         else:
             return False
 

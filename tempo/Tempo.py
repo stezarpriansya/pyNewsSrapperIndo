@@ -41,10 +41,18 @@ class Tempo:
         if indeks:
             for post in indeks:
                 link = [post.find('a', {'class':'col'}, href=True)['href'], ""]
-                detail = self.getDetailBerita(link)
-                if detail:
-                    if self.insertDB(detail):
-                        details.append(detail)
+                con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+                cursor = con.cursor()
+                query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+                cursor.execute(query)
+                result = cursor.fetchone()
+                cursor.close()
+                con.close()
+                if(result[0] <= 0):
+                    detail = self.getDetailBerita(link)
+                    if detail:
+                        if self.insertDB(detail):
+                            details.append(detail)
     #         links = getIndeksLink(links, date)
 
         return 'berhasil ambil semua berita'
@@ -67,8 +75,10 @@ class Tempo:
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
 #         print(len(scripts_all))
         if scripts_all:
-            scripts = json.loads(scripts_all[0].get_text(strip=True))
-            scripts2 = json.loads(scripts_all[1].get_text(strip=True))
+            scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[0].get_text(strip=True)))
+            scripts = json.loads(scripts)
+            scripts2 = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[1].get_text(strip=True)))
+            scripts2 = json.loads(scripts2)
         else:
             return False
         #category

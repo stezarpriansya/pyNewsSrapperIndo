@@ -70,8 +70,10 @@ class Idntimes:
         scripts = ''
         scripts2 = ''
         if scripts_all:
-            scripts = json.loads(scripts_all[-2].get_text(strip=True))
-            scripts2 = json.loads(scripts_all[-1].get_text(strip=True))
+            scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[-2].get_text(strip=True)))
+            scripts = json.loads(scripts)
+            scripts2 = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[-1].get_text(strip=True)))
+            scripts2 = json.loads(scripts2)
         else:
             return False
 

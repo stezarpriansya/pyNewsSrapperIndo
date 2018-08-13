@@ -27,20 +27,27 @@ class Tribun:
         url = "http://www.tribunnews.com/index-news?date="+date+"&page="+str(page)
         print(url)
         # Make the request and create the response object: response
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')  # Last I checked this was necessary.
+        options.add_argument('--disable-extensions')
+
+        driver = webdriver.Chrome("../chromedriver.exe", chrome_options=options)
         try:
-            response = requests.get(url)
+            driver.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
             details = self.getAllBerita(details, page, date)
+
         # Extract HTML texts contained in Response object: html
-        html = response.text
+        html = driver.page_source
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        indeks = soup.findAll('div', class_="ptb15")
+        indeks = soup.findAll('li', class_="ptb15")
         flag = True
         for post in indeks:
-            link = [post.find('a', href=True)['href'], ""]
+            link = [post.find('h3').find('a', href=True)['href'], ""]
             #check if there are a post with same url
             con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
             cursor = con.cursor()
@@ -68,28 +75,43 @@ class Tribun:
                     max_page = int(check_link['href'].replace('\n', '').split('page=')[-1])
 
                 if page < max_page:
-                    time.sleep(10)
+                    time.sleep(5)
                     details = self.getAllBerita(details, page+1, date)
 
 
-        return 'berhasil ambil semua berita'
+        return soup
 
     def getDetailBerita(self, link):
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]+'?page=all'
-        response = requests.get(url)
-        html = response.text
+        print(url)
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')  # Last I checked this was necessary.
+        options.add_argument('--disable-extensions')
+
+        driver = webdriver.Chrome("../chromedriver.exe", chrome_options=options)
+        try:
+            driver.get(url)
+        except ConnectionError:
+            print("Connection Error, but it's still trying...")
+            time.sleep(10)
+            details = self.getDetailBerita(link)
+
+        # Extract HTML texts contained in Response object: html
+        html = driver.page_source
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
 
         scripts = soup.findAll('script', {'type':'application/ld+json'})
         if scripts:
-            scripts = json.loads(scripts[0].get_text(strip=True))
+            scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts[0].get_text(strip=True)))
+            scripts = json.loads(scripts)
         else:
             return False
         #category

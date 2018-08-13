@@ -46,7 +46,7 @@ class Okezone:
                     details.append(detail)
 
         el_page = soup.find('div', class_="pagination-indexs")
-        if el_page:
+        if el_page.findAll('a'):
             max_page = (int(el_page.findAll('a')[-1]['href'][50:-1])/15)+1
 
             if page < max_page:
@@ -71,7 +71,8 @@ class Okezone:
         #extract scrip json ld
         scripts = soup.findAll('script', attrs={'type':'application/ld+json'})
         if scripts:
-            scripts = json.loads(scripts[-1].get_text(strip=True))
+            scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts[-1].get_text(strip=True)))
+            scripts = json.loads(scripts)
         else:
             return False
 
