@@ -42,7 +42,7 @@ class Oto:
         # flag = True
         for post in indeks:
             link = [post.find('a', href=True)['href'], "cat"]
-            #check if there are a post with same url
+            # check if there are a post with same url
             # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
             # cursor = con.cursor()
             # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
@@ -60,11 +60,9 @@ class Oto:
                     details.append(detail)
         # if flag:
         max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').get_text(strip=True)))/12)
-        # max_page = 2
-        if page <= max_page:
+        if page < max_page:
             time.sleep(5)
             details = self.getAllBerita(details, page+1, cat, date)
-        con.close
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):

@@ -48,7 +48,7 @@ class Sindonews:
         el_page = soup.find('div', class_="pagination")
         if el_page:
             active_page = el_page.find('li', class_="active").get_text(strip=True)
-            max_page = el_page.findAll('a')[-1]['data-ci-pagination-page']
+            max_page = el_page.findAll('li')[-2].get_text(strip=True)
             if max_page:
                 if active_page != max_page:
                     time.sleep(5)
@@ -103,8 +103,6 @@ class Sindonews:
 
         #extract title
         title = soup.find('div', class_="article")
-        # if ("foto" in title.lower()) or  "video" in title.lower():
-        #     return False
         articles['title'] = title.find('h1').get_text(strip=True) if title else ''
 
         #source
@@ -140,6 +138,7 @@ class Sindonews:
         Untuk memasukkan berita ke DB
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+        print(articles['url'])
         print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

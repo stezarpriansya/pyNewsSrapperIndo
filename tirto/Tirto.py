@@ -52,13 +52,13 @@ class Tirto:
                     if self.insertDB(detail):
                         details.append(detail)
 
-        el_page = soup.find('ul', class_="custom-pagination p-0 text-center mb-5 col-10 offset-1")
-        if el_page:
-            max_page = el_page.findAll('a')[-2].get_text(strip=True)
+            el_page = soup.find('ul', class_="custom-pagination p-0 text-center mb-5 col-10 offset-1")
+            if el_page:
+                max_page = int(el_page.findAll('a')[-2].get_text(strip=True))
 
-            if page != max_page:
-                time.sleep(10)
-                details = self.getAllBerita(details, page+1, date)
+                if page != max_page:
+                    time.sleep(10)
+                    details = self.getAllBerita(details, page+1, date)
 
         return 'berhasil ambil semua berita'
 
@@ -76,8 +76,11 @@ class Tirto:
         bc = soup.find('ol', class_="breadcrumbs")
         if not bc:
             return False
+
         cat = bc.findAll('a')[-1].get_text(strip=True)
         #sub = bc.findAll('a')[-1].get_text(strip=True)
+        if ("foto" in cat.lower()) or  ("video" in cat.lower()) or "infografik tunggal" in cat.lower():
+            return False
 
         #category
         articles['category'] = cat
@@ -87,24 +90,24 @@ class Tirto:
         articles['url'] = url
 
         #article
-        intro = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[0]
+        # intro = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[0]
         article = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[1]
-        author = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[2]
+        # author = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[2]
 
         #extract date
-        author_pubdate = soup.find('div', class_="col-md-6").get_text(strip=True).replace('Oleh: ','')
-        author_pubdate = author_pubdate.strip(' ')
+        author_pubdate = soup.find('span', class_='detail-date mt-1 text-left').get_text(strip=True).replace('Oleh: ','')
         author_pubdate = author_pubdate.split('- ')
-        pubdate = author_pubdate[1]
+        pubdate = author_pubdate[-1]
         pubdate = pubdate.strip(' ')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d %B %Y"), "%Y-%m-%d %H:%M:%S")
 
         articles['id'] = int(datetime.strptime(pubdate, "%d %B %Y").timestamp()) + len(url)
         #extract author
-        credit = soup.find('div', class_="credit").findAll('span', class_="reporter-grup")
-        reporter_sumber = credit[0].get_text(strip=True).replace('Reporter: ','')
-        author = credit[1].get_text(strip=True).replace('Penulis: ','')
-        editor = credit[2].get_text(strip=True).replace('Editor: ','')
+        # credit = soup.find('div', class_="credit").findAll('span', class_="reporter-grup")
+        # reporter_sumber = credit[0].get_text(strip=True).replace('Reporter: ','')
+        # author = credit[1].get_text(strip=True).replace('Penulis: ','')
+        # editor = credit[2].get_text(strip=True).replace('Editor: ','')
+        author = author_pubdate[0].strip(' ')
         articles['author'] = author
 
         #extract title
@@ -146,6 +149,7 @@ class Tirto:
         Untuk memasukkan berita ke DB
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+        print(articles['url'])
         print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"

@@ -39,7 +39,7 @@ class Mobil123:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('article', {'class':'article article--listing media push--bottom'})
-        flag = True
+        # flag = True
         for post in indeks:
             link = [post.find('a', href=True)['href'], '']
             #check if there are a post with same url
@@ -59,16 +59,15 @@ class Mobil123:
                 if self.insertDB(detail):
                     details.append(detail)
 
-        if flag:
-            el_page = soup.find('ul', class_="pagination")
-            if el_page:
-                last_page = int(el_page.findAll('a')[-1]['data-page'])
-                # active_page = int(el_page.find('li', class_="active").get_text(strip=True))
+        # if flag:
+        el_page = soup.find('ul', class_="pagination")
+        if el_page:
+            last_page = int(el_page.findAll('a')[-1]['data-page'])
+            # active_page = int(el_page.find('li', class_="active").get_text(strip=True))
 
-                if page <= last_page:
-                    time.sleep(5)
-                    details = self.getAllBerita(details, page+1, date)
-
+            if page <= last_page:
+                time.sleep(5)
+                details = self.getAllBerita(details, page+1, date)
 
         return 'berhasil ambil semua berita'
 
