@@ -133,7 +133,7 @@ class Otomart:
 
         #extract images
         image = soup.find('meta', attrs={"property":"og:image:secure_url"})
-        articles['images'] = image
+        articles['images'] = image['content']
 
         #hapus link sisip
         for link in article.findAll('figure'):
