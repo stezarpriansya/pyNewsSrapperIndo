@@ -61,24 +61,25 @@ class Tempo:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
         print(url)
         response = requests.get(url)
-        html = response.text
+        html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
-        soup = BeautifulSoup(html, "html5lib")
+        soup = BeautifulSoup(html2, "html5lib")
 
         #extract scrip json ld
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
 #         print(len(scripts_all))
         if scripts_all:
             scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[0].get_text(strip=True)))
-            scripts = json.loads(scripts)
+            scripts = re.sub(r'"articleBody".+', '', scripts)
+            scripts = json.loads(html.unescape(scripts))
             scripts2 = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[1].get_text(strip=True)))
-            scripts2 = json.loads(scripts2)
+            scripts2 = json.loads(html.unescape(scripts2))
         else:
             return False
         #category

@@ -14,8 +14,8 @@ from requests.exceptions import ConnectionError
 import unicodedata
 import mysql.connector
 
-class Rajamobil:
-    def getAllBerita(self, details, page, cat, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
+class Rumahhokie:
+    def getAllBerita(self, details, page, date=datetime.strftime(datetime.today(), '%Y/%m/%d')):
         """
         Untuk mengambil seluruh url rajamobil
         link pada indeks category tertentu
@@ -24,7 +24,7 @@ class Rajamobil:
         """
 
         print("page ", page)
-        url = "https://"+cat+".rajamobil.com/page/"+str(page)
+        url = "http://www.rumahhokie.com/beritaproperti/page/"+str(page)+"/?s"
         print(url)
         # Make the request and create the response object: response
         try:
@@ -32,31 +32,31 @@ class Rajamobil:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page, cat, date)
+            details = self.getAllBerita(details, page, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        indeks = soup.findAll('div', class_="td-block-span4")
+        indeks = soup.findAll('div', class_="td_module_16 td_module_wrap td-animation-stack")
         flag = True
         for post in indeks:
-            link = [post.find('a', href=True)['href'], cat]
+            link = [post.find('h3', class_="entry-title td-module-title").find('a', href=True)['href'], post.find('a', class_="td-post-category").get_text(strip=True)]
             #check if there are a post with same url
-            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            cursor = con.cursor()
-            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            cursor.close()
-            con.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if detail:
-                    if self.insertDB(detail):
-                        details.append(detail)
+            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            # cursor = con.cursor()
+            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            # cursor.execute(query)
+            # result = cursor.fetchone()
+            # cursor.close()
+            # con.close()
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if detail:
+                if self.insertDB(detail):
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="page-nav td-pb-padding-side")
@@ -69,7 +69,7 @@ class Rajamobil:
                 # max_page = 3
                 if page <= max_page:
                     time.sleep(5)
-                    details = self.getAllBerita(details, page+1, cat, date)
+                    details = self.getAllBerita(details, page+1, date)
 
         return 'berhasil ambil semua berita'
 
@@ -83,19 +83,20 @@ class Rajamobil:
         url = link[0]
         if ('video' in url.split('/')) or ('foto' in url.split('/')) or ('uncategorized' in url.split('/')) or ('promo' in url.split('/')):
             return False
+
         response = requests.get(url)
         html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html2, "html5lib")
 
         #category
-        articles['category'] = 'Otomotif'
+        articles['category'] = 'Properti'
         articles['subcategory'] = link[1]
 
         articles['url'] = url
         print(url)
 
-        article = soup.find('div', class_="td-pb-span8 td-main-content")
+        article = soup.find('div', class_="td-ss-main-content")
 
         #extract date
         pubdate = soup.find('meta', {'property':'article:published_time'})
@@ -103,8 +104,8 @@ class Rajamobil:
         pubdate = pubdate[0:19].strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S"), '%Y-%m-%d %H:%M:%S')
 
-        id = soup.find('input', {'id':'comment_post_ID'})
-        articles['id'] = id.get('value') if id else int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
+        id = soup.find('link', {'rel':'shortlink'})
+        articles['id'] = int(id['href'].replace('http://www.rumahhokie.com/beritaproperti/?p=', ''))     if id else int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S").timestamp()) + len(url)
 
         #extract author
         author = soup.find('div', {'class': 'td-post-author-name'}).find('a')
@@ -115,7 +116,7 @@ class Rajamobil:
         articles['title'] = title.get_text(strip=True).strip(' \t\n\r') if title else ''
 
         #source
-        articles['source'] = 'rajamobil'
+        articles['source'] = 'rumahhokie'
 
         #extract comments count
         articles['comments'] = 0

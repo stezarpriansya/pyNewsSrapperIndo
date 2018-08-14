@@ -42,21 +42,21 @@ class Carreview:
         for post in indeks:
             link = [post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
-            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            cursor = con.cursor()
-            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            cursor.close()
-            con.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if detail:
-                    if self.insertDB(detail):
-                        details.append(detail)
+            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            # cursor = con.cursor()
+            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            # cursor.execute(query)
+            # result = cursor.fetchone()
+            # cursor.close()
+            # con.close()
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if detail:
+                if self.insertDB(detail):
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
@@ -94,7 +94,7 @@ class Carreview:
         #extract date
         pubdate = article.find('li', {'class':'publish-date'})
         pubdate = pubdate.get_text(strip=True).split(',') if pubdate else ['','01-Jan-1970 00:00']
-        pubdate = pubdate[1].strip(' \t\n\r').replace('Ags', 'Agt').replace('Juli', 'Jul').replace('Juni', 'Jun')
+        pubdate = pubdate[1].strip(' \t\n\r').replace('Ags', 'Agt').replace('Juli', 'Jul').replace('Juni', 'Jun').replace('Dec', 'Des')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d-%b-%Y %H:%M"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
 
@@ -113,8 +113,8 @@ class Carreview:
         articles['comments'] = 0
 
         #extract tags
-        tags = article.find('div', class_="post-meta").findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags]) if tags else ''
+        tags = article.find('div', class_="post-meta")
+        articles['tags'] = ','.join([x.get_text(strip=True).replace('#', '') for x in tags.findAll('a')]) if tags else ''
 
         #extract images
         images = soup.find("meta", attrs={'property':'og:image'})

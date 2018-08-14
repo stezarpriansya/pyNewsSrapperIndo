@@ -59,7 +59,12 @@ class Idntimes:
         #link
         url = link[0]
         print(url)
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+        except ConnectionError:
+            print("Connection Error, but it's still trying...")
+            time.sleep(20)
+            details = self.getDetailBerita(link)
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
@@ -69,7 +74,7 @@ class Idntimes:
 #         print(len(scripts_all))
         scripts = ''
         scripts2 = ''
-        if scripts_all:
+        if len(scripts_all) >= 2:
             scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[-2].get_text(strip=True)))
             scripts = json.loads(scripts)
             scripts2 = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[-1].get_text(strip=True)))

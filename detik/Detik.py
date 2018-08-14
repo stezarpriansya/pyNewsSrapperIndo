@@ -38,8 +38,17 @@ class Detik:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         contentDiv = soup.find('div', attrs={'class':'lf_content'})
+        if not contentDiv:
+            contentDiv = soup.find('div', attrs={'class':'content right'})
+            if not contentDiv:
+                contentDiv = soup.find('div', attrs={'class':'rm_content'})
         indeks = contentDiv.findAll('article')
         for post in indeks:
+            cek_foto = post.find('span', {'class':'sub_judul'})
+            if cek_foto:
+                print(cek_foto.get_text(strip=True).lower())
+                if ("foto" in cek_foto.get_text(strip=True).lower()) or ("video" in cek_foto.get_text(strip=True).lower()) or ("fotoinet" in cek_foto.get_text(strip=True).lower()) or ("videoinet" in cek_foto.get_text(strip=True).lower()):
+                    continue
             link = [post.find('a', href=True)['href'], category]
             detail = self.getDetailBerita(link)
             if detail:
@@ -64,18 +73,19 @@ class Detik:
         articles = {}
         #link
         url = link[0]
+        print(url)
         response = requests.get(url)
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-
+        # print(soup)
         #extract subcategory from breadcrumb
         bc = soup.find('div', class_="breadcrumb")
         if not bc:
             return False
 
         sub = bc.findAll('a')[1].get_text(strip=True)
-        if ("foto" in sub.lower()) or  "video" in sub.lower():
+        if ("foto" in sub.lower()) or ("video" in sub.lower()) or ("photos" in sub.lower()) or ("videos" in sub.lower()):
             return False
 
         articles['subcategory'] = sub
@@ -86,19 +96,26 @@ class Detik:
         article = soup.find('article')
 
         #extract date
-        pubdate = soup.find("meta", attrs={'name':'publishdate'})['content']
-        pubdate = pubdate.strip(' \t\n\r')
-        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y/%m/%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+        pubdate = soup.find("meta", attrs={'name':'publishdate'})
+        if pubdate:
+            pubdate = pubdate['content'].strip(' \t\n\r')
+            articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y/%m/%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
+            id = soup.find("meta", attrs={'name':'articleid'})
+            articles['id'] = int(id['content']) if id else int(datetime.strptime(pubdate, "%Y/%m/%d %H:%M:%S").timestamp()) + len(url)
+        else:
+            pubdate = soup.find('span', {'class':'date'})
+            pubdate = pubdate.get_text(strip=True).strip(' \t\n\r').replace(" WIB", '')
+            articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%A, %d %b %Y %H:%M"), '%Y-%m-%d %H:%M:%S')
 
-        id = soup.find("meta", attrs={'name':'articleid'})
-        articles['id'] = int(id['content']) if id else int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M").timestamp()) + len(url)
+            id = soup.find("meta", attrs={'name':'articleid'})
+            articles['id'] = int(id['content']) if id else int(datetime.strptime(pubdate, "%A, %d %b %Y %H:%M").timestamp()) + len(url)
 
         #extract author
         author = soup.find("meta", attrs={'name':'author'})
         articles['author'] = author['content'] if author else ''
 
         #extract title
-        title =  article.find('div', class_="jdl").find('h1')
+        title =  article.find('meta', {"property":"og:title"})
         articles['title'] = title.get_text(strip=True) if title else ''
 
         #source
@@ -113,19 +130,24 @@ class Detik:
         articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
-        images = article.find('div', class_="pic_artikel").find('img')
-        articles['images'] = images['src'] if images else ''
+        images = article.find('div', class_="pic_artikel")
+        articles['images'] = images.find('img')['src'] if images else ''
 
         #extract detail
         detail = article.find('div', class_="detail_text")
-
+        if not detail:
+            detail = article.find('div', {'id': 'detikdetailtext'})
+            if not detail:
+                return False
         #hapus link sisip
-        for link in detail.findAll('table', class_="linksisip"):
-            link.decompose()
+        if detail.findAll('table', class_="linksisip"):
+            for link in detail.findAll('table', class_="linksisip"):
+                link.decompose()
 
         #hapus video sisip
-        for tag in detail.findAll('div', class_="sisip_embed_sosmed"):
-            tag.decompose()
+        if detail.findAll('div', class_="sisip_embed_sosmed"):
+            for tag in detail.findAll('div', class_="sisip_embed_sosmed"):
+                tag.decompose()
 
         #hapus all setelah clear fix
         if detail.find('div', class_="clearfix mb20"):

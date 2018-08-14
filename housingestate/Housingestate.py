@@ -23,9 +23,9 @@ class Housingestate:
         date = Y/m/d
         """
 
-        print("page ", page)
+        # print("page ", page)
         date2 = datetime.strptime(date, '%Y/%m/%d')
-        url = "http://housingestate.id/wp-admin/admin-ajax.php?action=alm_query_posts&order=DESC&orderby=date&month="+str(date2.date().month)+"&year="+str(date2.date().year)
+        url = "http://housingestate.id/wp-admin/admin-ajax.php?action=alm_query_posts&order=DESC&orderby=date&month="+str(date2.date().month)+"&year="+str(date2.date().year)+"&day="+str(date2.date().day)
         print(url)
         # Make the request and create the response object: response
         try:
@@ -37,30 +37,29 @@ class Housingestate:
         # Extract HTML texts contained in Response object: html
         json_res = json.loads(response.text)
         # Create a BeautifulSoup object from the HTML: soup
-        soup = BeautifulSoup(json_res['html'], "html5lib")
-        indeks = soup.findAll('div', class_="item-box")
-        for post in indeks:
-            link = [post.find('a', href=True)['href'], ""]
-            #check if there are a post with same url
-            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            # cursor = con.cursor()
-            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            # cursor.execute(query)
-            # result = cursor.fetchone()
-            # cursor.close()
-            # con.close()
-            #comment sementara
-            # if(result[0] > 0):
-            #     flag = False
-            #     break
-            # else:
-            detail = self.getDetailBerita(link)
-            if detail:
-                if self.insertDB(con, detail):
-                    # print("Insert berita ", articles['title'])
-                    details.append(detail)
-
-
+        if json_res['html']:
+            soup = BeautifulSoup(json_res['html'], "html5lib")
+            indeks = soup.findAll('div', class_="item-box")
+            for post in indeks:
+                link = [post.find('a', href=True)['href'], ""]
+                #check if there are a post with same url
+                # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+                # cursor = con.cursor()
+                # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+                # cursor.execute(query)
+                # result = cursor.fetchone()
+                # cursor.close()
+                # con.close()
+                #comment sementara
+                # if(result[0] > 0):
+                #     flag = False
+                #     break
+                # else:
+                detail = self.getDetailBerita(link)
+                if detail:
+                    if self.insertDB(detail):
+                        # print("Insert berita ", articles['title'])
+                        details.append(detail)
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):

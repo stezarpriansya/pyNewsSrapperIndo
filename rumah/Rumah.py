@@ -27,17 +27,28 @@ class Rumah:
         url = "https://www.rumah.com/berita-properti/category/"+cat+"?page="+str(page)
         print(url)
         # Make the request and create the response object: response
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')  # Last I checked this was necessary.
+        options.add_argument('--disable-extensions')
+
+        driver = webdriver.Chrome("../chromedriver.exe", chrome_options=options)
+        html = ''
         try:
-            response = requests.get(url)
+            driver.get(url)
+            # Extract HTML texts contained in Response object: html
+            html = driver.page_source
+            driver.quit()
         except ConnectionError:
+            driver.quit()
             print("Connection Error, but it's still trying...")
             time.sleep(10)
             details = self.getAllBerita(details, page, cat, date)
-        # Extract HTML texts contained in Response object: html
-        html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        indeks = contentDiv.findAll('div', {'class':'box news-article-lists'})
+        contentDiv = soup.find('div', {"class":"box-news-article"})
+        print(soup)
+        indeks = soup.findAll('div', {'class':'box news-article-lists'})
         flag = True
         for post in indeks:
             link = ["https://www.rumah.com"+post.find('a', href=True)['href'], ""]

@@ -35,20 +35,35 @@ class Carmudi:
         soup = BeautifulSoup(html, "html5lib")
         contentDiv = soup.find('div', class_="vw-loop vw-loop--medium vw-loop--medium-6 vw-loop--col-2")
         indeks = contentDiv.findAll('a', class_="vw-post-box__read-more vw-button vw-button--small vw-button--accent", href=True)
+        flag = True
         for post in indeks:
             link = [post['href'], ""]
-            detail = self.getDetailBerita(link)
-            if detail:
-                if self.insertDB(detail):
-                    details.append(detail)
+            #check if there are a post with same url
+            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            cursor = con.cursor()
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            cursor.close()
+            con.close()
+            # comment sementara
+            if(result[0] > 0):
+                flag = False
+                break
+            else:
+                detail = self.getDetailBerita(link)
+                if detail:
+                    if self.insertDB(detail):
+                        details.append(detail)
 
-        el_page = soup.find('div', class_="vw-page-navigation-pagination")
-        if el_page:
-            max_page = int(el_page.findAll('a')[-2].get_text(strip=True).replace('\n', '').strip(' '))
+        if flag:
+            el_page = soup.find('div', class_="vw-page-navigation-pagination")
+            if el_page:
+                max_page = int(el_page.findAll('a')[-2].get_text(strip=True).replace('\n', '').strip(' '))
 
-            if page < max_page:
-                time.sleep(10)
-                details = self.getAllBerita(details, page+1)
+                if page < max_page:
+                    time.sleep(10)
+                    details = self.getAllBerita(details, page+1)
 
         return 'berhasil ambil semua berita'
 

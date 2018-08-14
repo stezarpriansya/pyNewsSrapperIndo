@@ -89,6 +89,8 @@ class Otodriver:
         articles['url'] = url
 
         article = soup.find('div', class_="left-content")
+        if not article:
+            return False
 
         #extract date
         pubdate = article.find('meta', {'itemprop':'datePublished'})

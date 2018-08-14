@@ -33,15 +33,18 @@ class Tribun:
         options.add_argument('--disable-extensions')
 
         driver = webdriver.Chrome("../chromedriver.exe", chrome_options=options)
+        html = ''
         try:
             driver.get(url)
+            # Extract HTML texts contained in Response object: html
+            html = driver.page_source
+            driver.quit()
         except ConnectionError:
+            driver.quit()
             print("Connection Error, but it's still trying...")
             time.sleep(10)
             details = self.getAllBerita(details, page, date)
 
-        # Extract HTML texts contained in Response object: html
-        html = driver.page_source
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('li', class_="ptb15")
@@ -96,15 +99,19 @@ class Tribun:
         options.add_argument('--disable-extensions')
 
         driver = webdriver.Chrome("../chromedriver.exe", chrome_options=options)
+        html = ''
         try:
             driver.get(url)
+            # Extract HTML texts contained in Response object: html
+            html = driver.page_source
+            driver.quit()
         except ConnectionError:
+            driver.quit()
             print("Connection Error, but it's still trying...")
             time.sleep(10)
             details = self.getDetailBerita(link)
 
-        # Extract HTML texts contained in Response object: html
-        html = driver.page_source
+
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
 

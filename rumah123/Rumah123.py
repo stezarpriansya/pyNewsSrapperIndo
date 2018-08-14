@@ -10,7 +10,7 @@ from selenium.webdriver.chrome.options import Options
 import html
 import json
 import time
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, TooManyRedirects
 import unicodedata
 import mysql.connector
 
@@ -32,32 +32,33 @@ class Rumah123:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page, cat, date)
+            details = self.getAllBerita(details, page, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        contentDiv = soup.find('div', {'class':'news-list-container'})
+        # print(soup)
+        contentDiv = soup.find('div', {'id':'news-list-container'})
         indeks = contentDiv.findAll('li', class_="list-group-item")
         flag = True
         for post in indeks:
             link = [post.find('a', href=True)['href'], ""]
             #check if there are a post with same url
-            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            cursor = con.cursor()
-            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            cursor.close()
-            con.close()
-            if(result[0] > 0):
-                flag = False
-                break
-            else:
-                detail = self.getDetailBerita(link)
-                if detail :
-                    if self.insertDB(detail):
-                        details.append(detail)
+            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            # cursor = con.cursor()
+            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            # cursor.execute(query)
+            # result = cursor.fetchone()
+            # cursor.close()
+            # con.close()
+            # if(result[0] > 0):
+            #     flag = False
+            #     break
+            # else:
+            detail = self.getDetailBerita(link)
+            if detail :
+                if self.insertDB(detail):
+                    details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
@@ -66,8 +67,8 @@ class Rumah123:
                 active_page = el_page.find('li', {'class':'active'}).get_text(strip=True).strip(' ')
                 # max_page = 3
                 if active_page != max_page:
-                    time.sleep(10)
-                    details = self.getAllBerita(details, page+1, cat, date)
+                    time.sleep(5)
+                    details = self.getAllBerita(details, page+1, date)
 
         return 'berhasil ambil semua berita'
 
@@ -75,11 +76,14 @@ class Rumah123:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(5)
         articles = {}
         #link
         url = link[0]
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+        except TooManyRedirects:
+            return False
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
@@ -87,14 +91,16 @@ class Rumah123:
         #category
         articles['category'] = 'Properti'
         articles['subcategory'] = bc.findAll('li')[-2].get_text(strip=True) if bc else ''
+        if ('photo' in articles['subcategory'].lower()) or ('video' in articles['subcategory'].lower()):
+            return False
 
         articles['url'] = url
 
-        article = soup.find('div', class_="col-xs-12 col-sm-12 col-md-8 col-lg-8")
+        article = soup.find('div', class_="post-wrapper")
 
         #extract date
         pubdate = article.find('meta', {'itemprop':'datePublished'})
-        pubdate = pubdate['content'] if pubdate else ''
+        pubdate = pubdate['content'][:-2] if pubdate else '1970-01-01 01:01:01'
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = int(url.split('-')[-1])
@@ -123,7 +129,7 @@ class Rumah123:
         articles['images'] = images['content'] if images else ''
 
         #extract detail
-        detail = article.find('div', attrs={"class":"post-text"})
+        detail = article.find('div', {"class":"post-text"})
 
         #hapus video sisip
         for div in detail.findAll('div'):
@@ -143,9 +149,10 @@ class Rumah123:
 
         #hapus linksisip
         for ls in detail.findAll('p'):
-            if 'baca' in ls.find('p').get_text(strip=True).lower():
-                if (ls.find('strong')) and (ls.find('a')):
-                    ls.decompose()
+            if ls.find('p'):
+                if 'baca' in ls.find('p').get_text(strip=True).lower():
+                    if (ls.find('strong')) and (ls.find('a')):
+                        ls.decompose()
 
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")

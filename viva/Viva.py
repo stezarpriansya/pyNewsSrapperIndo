@@ -50,7 +50,7 @@ class Viva:
                     load_more = driver.find_element_by_id('load_terbaru_btn')
                     load_more.click()
                     time.sleep(10)
-                    details = self.getLoadMorePost(con, details, driver, date)
+                    details = self.getLoadMorePost(details, driver, date)
 
         return details
 
@@ -77,7 +77,7 @@ class Viva:
             time.sleep(10)
 
         details = self.getLoadMorePost(details, driver, date)
-
+        driver.quit()
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):

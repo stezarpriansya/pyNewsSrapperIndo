@@ -49,8 +49,8 @@ class Otorider:
             # result = cursor.fetchone()
             # cursor.close()
             # con.close()
-            #comment sementara
-            # if (link[0] in [x[0]['url'] for x in details]) or (result[0] > 0):
+            # # comment sementara
+            # if (result[0] > 0):
             #     max_page = page
             #     break
             # else:
@@ -101,10 +101,11 @@ class Otorider:
         articles['url'] = url
 
         article = soup.find('div', class_="left-content")
-
+        if not article:
+            return False
         #extract date
         pubdate = article.find('meta', {'itemprop':'datePublished'})
-        pubdate = pubdate['content'] if pubdate else '1970-01-01 00:00:00'
+        pubdate = pubdate['content'] if pubdate else '1970-01-01 01:00:00'
         pubdate = pubdate.strip(' \t\n\r')
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S"), '%Y-%m-%d %H:%M:%S')
         articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S").timestamp()) + len(url)
