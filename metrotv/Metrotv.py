@@ -156,6 +156,7 @@ class Metrotv:
         Untuk memasukkan berita ke DB
         """
         con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+        print(articles['url'])
         print("Insert berita ", articles['title'])
         cursor = con.cursor()
         query = "SELECT count(*) FROM article WHERE url like '"+articles['url']+"'"
