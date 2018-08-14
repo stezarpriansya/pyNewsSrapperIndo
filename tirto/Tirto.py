@@ -43,7 +43,7 @@ class Tirto:
         tes = script[0].get_text(strip=True).replace('window.__NUXT__=', '')[:-1]
         json_mobil = json.loads(tes)
 
-        link_articles = json_mobil['data'][0]['article']
+        link_articles = json_mobil['data'][0]['listarticle'][1:]
         if link_articles:
             for art in link_articles:
                 link = ['https://tirto.id'+art['articleUrl'], '']

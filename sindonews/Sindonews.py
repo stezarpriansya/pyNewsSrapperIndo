@@ -49,10 +49,10 @@ class Sindonews:
         if el_page:
             active_page = el_page.find('li', class_="active").get_text(strip=True)
             max_page = el_page.findAll('a')[-1]['data-ci-pagination-page']
-
-            if active_page != max_page:
-                time.sleep(5)
-                details = self.getAllBerita(details, page+1, cat_link, offset+10, date)
+            if max_page:
+                if active_page != max_page:
+                    time.sleep(5)
+                    details = self.getAllBerita(details, page+1, cat_link, offset+10, date)
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
