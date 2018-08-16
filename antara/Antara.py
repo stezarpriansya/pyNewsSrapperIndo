@@ -21,8 +21,16 @@ class Antara:
         link pada indeks category tertentu
         date format : dd-mm-YYYY
         """
+        #create log file
+        tmp = open("antara.log","r").readlines()
 
+        file = open("antara.log", "w")
+        file.write("end_date="+datetime.strftime(datetime.strptime(tmp[0].replace('end_date=', '').strip(" \n\r\t"), '%Y-%m-%d'), '%Y-%m-%d')+"\n")
+        file.write("start_date="+datetime.strftime(datetime.strptime(date.strip(" \n\r\t"), '%d-%m-%Y'), '%Y-%m-%d')+"\n")
+        file.write("page="+str(page))
+        file.close()
         print("page ", page)
+        
         url = "https://www.antaranews.com/search/%20/"+date+"/"+date+"/"+str(page)
         print(url)
         # Make the request and create the response object: response
