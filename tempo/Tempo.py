@@ -73,10 +73,10 @@ class Tempo:
 
         #extract scrip json ld
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
-#         print(len(scripts_all))
+
         if scripts_all:
             scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[0].get_text(strip=True)))
-            scripts = re.sub(r'\"articleBody\".+', '', scripts)
+            scripts = re.sub(r'"articleBody".+', '', scripts)
             scripts = json.loads(html.unescape(scripts))
             scripts2 = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[1].get_text(strip=True)))
             scripts2 = json.loads(html.unescape(scripts2))
@@ -108,7 +108,6 @@ class Tempo:
         articles['source'] = 'tempo'
 
         #extract comments count
-#         articles['comments'] = int(soup.find('span', class_="commentWidget-total").find('b').get_text(strip=True).strip(' \t\n\r'))
         articles['comments'] = 0
 
         #extract tags

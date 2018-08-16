@@ -134,11 +134,19 @@ class Detik:
         articles['images'] = images.find('img')['src'] if images else ''
 
         #extract detail
-        detail = article.find('div', class_="detail_text")
+        if articles['category'] == 'news':
+            detail = article.find('div', class_="detail_text")
+        else:
+            detail = article.find('div', attrs={"id": "detikdetailtext"})
+
         if not detail:
-            detail = article.find('div', {'id': 'detikdetailtext'})
-            if not detail:
-                return False
+            return False
+        # if not detail:
+        #     detail = article.find('div', attrs={"id": "detikdetailtext"})
+        #     if not detail:
+        #         detail = article.find('div', attrs={"class": "read__content pull-left"})
+        #         if not detail:
+        #             return False
         #hapus link sisip
         if detail.findAll('table', class_="linksisip"):
             for link in detail.findAll('table', class_="linksisip"):

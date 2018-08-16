@@ -71,7 +71,6 @@ class Idntimes:
 
         #extract scrip json ld
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
-#         print(len(scripts_all))
         scripts = ''
         scripts2 = ''
         if len(scripts_all) >= 2:
@@ -108,7 +107,7 @@ class Idntimes:
         articles['source'] = 'idntimes'
 
         #extract comments count
-#         articles['comments'] = int(soup.find('span', class_="commentWidget-total").find('b').get_text(strip=True).strip(' \t\n\r'))
+        # articles['comments'] = int(soup.find('span', class_="commentWidget-total").find('b').get_text(strip=True).strip(' \t\n\r'))
         articles['comments'] = 0
 
         #extract tags
