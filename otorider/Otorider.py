@@ -42,22 +42,22 @@ class Otorider:
         for post in indeks:
             link = [post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
-            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            # cursor = con.cursor()
-            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            # cursor.execute(query)
-            # result = cursor.fetchone()
-            # cursor.close()
-            # con.close()
-            # # comment sementara
-            # if (result[0] > 0):
-            #     max_page = page
-            #     break
-            # else:
-            detail = self.getDetailBerita(link)
-            if detail :
-                if self.insertDB(detail):
-                    details.append(detail)
+            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            cursor = con.cursor()
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            cursor.close()
+            con.close()
+            # comment sementara
+            if (result[0] > 0):
+                max_page = page
+                break
+            else:
+                detail = self.getDetailBerita(link)
+                if detail :
+                    if self.insertDB(detail):
+                        details.append(detail)
             max_page = -1
                 # max_page = 3
 

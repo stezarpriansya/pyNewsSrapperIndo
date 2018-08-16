@@ -66,7 +66,7 @@ class Rumah:
             else:
                 detail = self.getDetailBerita(link)
                 if detail:
-                    if (self.insertDB(con, detail)) :
+                    if (self.insertDB(detail)) :
                         details.append(detail)
 
         if flag:
