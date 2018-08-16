@@ -39,30 +39,30 @@ class Oto:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('li', class_="card")
-        # flag = True
+        flag = True
         for post in indeks:
             link = [post.find('a', href=True)['href'], "cat"]
             # check if there are a post with same url
-            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            # cursor = con.cursor()
-            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            # cursor.execute(query)
-            # result = cursor.fetchone()
-            # cursor.close()
-            # con.close()
-            # if(result[0] > 0):
-            #     flag = False
-            #     break
-            # else:
-            detail = self.getDetailBerita(link)
-            if detail:
-                if self.insertDB(detail):
-                    details.append(detail)
-        # if flag:
-        max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').get_text(strip=True)))/12)
-        if page < max_page:
-            time.sleep(5)
-            details = self.getAllBerita(details, page+1, cat, date)
+            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            cursor = con.cursor()
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            cursor.close()
+            con.close()
+            if(result[0] > 0):
+                flag = False
+                break
+            else:
+                detail = self.getDetailBerita(link)
+                if detail:
+                    if self.insertDB(detail):
+                        details.append(detail)
+        if flag:
+            max_page = math.ceil((int(soup.find('div', class_="news-count").find('span').get_text(strip=True)))/12)
+            if page < max_page:
+                time.sleep(5)
+                details = self.getAllBerita(details, page+1, cat, date)
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):

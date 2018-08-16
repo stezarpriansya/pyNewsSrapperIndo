@@ -45,14 +45,16 @@ class Sindonews:
                     if self.insertDB(detail):
                         details.append(detail)
 
-        el_page = soup.find('div', class_="pagination")
-        if el_page:
-            active_page = el_page.find('li', class_="active").get_text(strip=True)
-            max_page = el_page.findAll('li')[-2].get_text(strip=True)
-            if max_page:
-                if active_page != max_page:
-                    time.sleep(5)
-                    details = self.getAllBerita(details, page+1, cat_link, offset+10, date)
+            el_page = soup.find('div', class_="pagination")
+            if el_page:
+                active_page = el_page.find('li', class_="active").get_text(strip=True)
+                max_page = el_page.findAll('a')[-1]
+                if max_page:
+                    if active_page != max_page['data-ci-pagination-page']:
+                        time.sleep(5)
+                        details = self.getAllBerita(details, page+1, cat_link, offset+10, date)
+                else:
+                    max_page = page
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):

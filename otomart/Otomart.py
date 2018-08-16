@@ -43,22 +43,22 @@ class Otomart:
         flag = True
         for post in indeks:
             link = [post.find('a', href=True)['href'], '']
-            #check if there are a post with same url
-            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            # cursor = con.cursor()
-            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            # cursor.execute(query)
-            # result = cursor.fetchone()
-            # cursor.close()
-            # con.close()
-            # if(result[0] > 0):
-            #     flag = False
-            #     break
-            # else:
-            detail = self.getDetailBerita(link)
-            if detail:
-                if self.insertDB(detail):
-                    details.append(detail)
+            # check if there are a post with same url
+            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            cursor = con.cursor()
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            cursor.close()
+            con.close()
+            if(result[0] > 0):
+                flag = False
+                break
+            else:
+                detail = self.getDetailBerita(link)
+                if detail:
+                    if self.insertDB(detail):
+                        details.append(detail)
         if flag:
             el_page = soup.find('div', class_="wp-pagenavi")
             if el_page:
@@ -133,7 +133,7 @@ class Otomart:
 
         #extract images
         image = soup.find('meta', attrs={"property":"og:image:secure_url"})
-        articles['images'] = image['content']
+        articles['images'] = image['content'] if image else ''
 
         #hapus link sisip
         for link in article.findAll('figure'):
