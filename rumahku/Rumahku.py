@@ -107,23 +107,28 @@ class RUmahku:
         #article_url
         articles['url'] = url
 
+        # articleid
+        article_id = url.replace('/','').replace('.','').split('-')[-1]
+        articles['id'] = int(article_id)
+
         #article
         article = soup.find('div', class_='text-article')
         text = article.find('div', class_='text').text
 
         #extract date
         pubdate = soup.findAll('span', class_='date small-text')[1].text
+        pubdate = pubdate.replace('WIB','')
+        pubdate = pubdate.replace('Agu','Agt')
         pubdate = pubdate.strip(' \t\n\r')
-        pubdate = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S+07:00"), "%Y-%m-%d %H:%M:%S")
+        pubdate = datetime.strftime(datetime.strptime(pubdate, "%d %b %Y, %H:%M"), "%Y-%m-%d %H:%M:%S")
         articles['pubdate'] = pubdate
-        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S").timestamp()) + len(url)
 
         #extract author
-        author = soup.find('span', class_='post-meta-author')
-        articles['author'] = author.get_text(strip=True) if author else ''
+        author = soup.find('div', class_='title-article margin-bottom-4')
+        articles['author'] = author.find('label', class_='normal t-purple') if author else ''
 
         #source
-        articles['source'] = 'propertiterkini'
+        articles['source'] = 'rumahku'
 
         #extract comments count
         articles['comments'] = 0
