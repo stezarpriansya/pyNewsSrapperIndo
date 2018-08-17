@@ -40,27 +40,27 @@ class Propertiterkini:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         contentDiv = soup.find('div', class_="post-listing archive-box")
-        # flag = True
+        flag = True
         if contentDiv:
             for post in contentDiv.findAll('h2'):
                 link = [post.find('a', href=True)['href'], category]
-                #check if there are a post with same url
-                # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-                # cursor = con.cursor()
-                # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-                # cursor.execute(query)
-                # result = cursor.fetchone()
-                # cursor.close()
-                # con.close()
-                # if(result[0] > 0):
-                #     flag = False
-                #     break
-                # else:
-                detail = self.getDetailBerita(link)
-                if detail:
-                    if self.insertDB(detail):
-                        details.append(detail)
-        # if flag:
+                # check if there are a post with same url
+                con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+                cursor = con.cursor()
+                query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+                cursor.execute(query)
+                result = cursor.fetchone()
+                cursor.close()
+                con.close()
+                if(result[0] > 0):
+                    flag = False
+                    break
+                else:
+                    detail = self.getDetailBerita(link)
+                    if detail:
+                        if self.insertDB(detail):
+                            details.append(detail)
+        if flag:
             el_page = soup.find('div', class_='pagination')
             if el_page:
                 max_page = int(el_page.find('span', class_='pages').text.split(' ')[-1])
@@ -125,8 +125,9 @@ class Propertiterkini:
         articles['comments'] = 0
 
         #extract tags
-        tags = soup.find('p', class_='post-tag').findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags]) if tags else ''
+        tags = soup.find('p', class_='post-tag')
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
+
 
         #extract images
         images = soup.find('div', class_='single-post-thumb').find('img')
