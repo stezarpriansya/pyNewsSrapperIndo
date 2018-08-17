@@ -30,7 +30,7 @@ class Antara:
         file.write("page="+str(page))
         file.close()
         print("page ", page)
-        
+
         url = "https://www.antaranews.com/search/%20/"+date+"/"+date+"/"+str(page)
         print(url)
         # Make the request and create the response object: response
@@ -138,7 +138,7 @@ class Antara:
 
         #hapus video sisip
         for strong in detail.findAll('strong'):
-            if ("foto" in sub.get_text(strip=True).lower()) or  ("video" in sub.get_text(strip=True).lower()):
+            if ("foto" in strong.get_text(strip=True).lower()) or  ("video" in strong.get_text(strip=True).lower()):
                 strong.decompose()
 
         #hapus link sisip
