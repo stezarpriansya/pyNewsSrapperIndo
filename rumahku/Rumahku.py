@@ -13,15 +13,11 @@ import unicodedata
 import mysql.connector
 
 class Rumahku:
-    def getAllBerita(self, details, page, cat_link, category):
+    def getAllBerita(self, details, page):
         """
         Untuk mengambil seluruh url
         link pada indeks category tertentu
         date format : YYYY/mm/dd
-        category :  berita-properti
-                    kisah
-                    inspirasi
-                    bahan-bangunan
         """
 
         print("page ", page)
@@ -34,16 +30,16 @@ class Rumahku:
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(5)
-            details = self.getAllBerita(details, page, date)
+            details = self.getAllBerita(details, page)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        contentDiv = soup.find('div', class_="post-listing archive-box")
+        contentDiv = soup.find('div', class_='tab-content')
         # flag = True
         if contentDiv:
-            for post in contentDiv.findAll('h2'):
-                link = [post.find('a', href=True)['href'], category]
+            for post in contentDiv.findAll('li'):
+                link = "http://www.rumahku.com"+[post.find('a', href=True)['href'], '']
                 #check if there are a post with same url
                 # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
                 # cursor = con.cursor()
@@ -63,8 +59,10 @@ class Rumahku:
         # if flag:
             el_page = soup.find('div', class_='pagination')
             if el_page:
-                max_page = int(el_page.find('span', class_='pages').text.split(' ')[-1])
-                if page < max_page:
+                active_page = soup.find('li',class_='active').text
+                next_page =
+                if next_page:
+                    if active_page < next_page:
                     time.sleep(5)
                     details = self.getAllBerita(details, page+1, cat_link, category)
 

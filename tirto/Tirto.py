@@ -91,9 +91,10 @@ class Tirto:
 
         # infografik
         infografik = soup.find('div', class_='col-12 photograph-caption-holder mt-2').find('h6')
-        infografik = infografik.get_text(strip=True) if infografik else ''
-        if "infografik" in infografik.lower():
-            return False
+        if infografik:
+            infografik1 = infografik.get_text(strip=True) if infografik else ''
+            if "infografik" in infografik1.lower():
+                return False
 
         #article
         # intro = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[0]
