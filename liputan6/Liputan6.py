@@ -97,6 +97,8 @@ class Liputan6:
 
         #article
         article = soup.find("div", class_="article-content-body__item-content")
+        if not article:
+            return False
 
         #extract date
         pubdate = soup.find('p', class_="read-page--header--author__datetime-wrapper").find('time')['datetime']

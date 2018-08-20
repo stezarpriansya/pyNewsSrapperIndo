@@ -12,7 +12,7 @@ from requests.exceptions import ConnectionError
 import unicodedata
 import mysql.connector
 
-class RUmahku:
+class Rumahku:
     def getAllBerita(self, details, page, cat_link, category):
         """
         Untuk mengambil seluruh url
