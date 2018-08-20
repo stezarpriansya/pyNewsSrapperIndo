@@ -89,6 +89,12 @@ class Tirto:
         #article_url
         articles['url'] = url
 
+        # infografik
+        infografik = soup.find('div', class_='col-12 photograph-caption-holder mt-2').find('h6')
+        infografik = infografik.get_text(strip=True) if infografik else ''
+        if "infografik" in infografik.lower():
+            return False
+
         #article
         # intro = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[0]
         article = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[1]
