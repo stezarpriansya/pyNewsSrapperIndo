@@ -33,6 +33,8 @@ class Rumah123:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
             details = self.getAllBerita(details, page, date)
+        except TooManyRedirects:
+            return False
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -44,21 +46,21 @@ class Rumah123:
         for post in indeks:
             link = [post.find('a', href=True)['href'], ""]
             #check if there are a post with same url
-            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            # cursor = con.cursor()
-            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            # cursor.execute(query)
-            # result = cursor.fetchone()
-            # cursor.close()
-            # con.close()
-            # if(result[0] > 0):
-            #     flag = False
-            #     break
-            # else:
-            detail = self.getDetailBerita(link)
-            if detail :
-                if self.insertDB(detail):
-                    details.append(detail)
+            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            cursor = con.cursor()
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            cursor.close()
+            con.close()
+            if(result[0] > 0):
+                flag = False
+                break
+            else:
+                detail = self.getDetailBerita(link)
+                if detail :
+                    if self.insertDB(detail):
+                        details.append(detail)
 
         if flag:
             el_page = soup.find('ul', class_="pagination")
@@ -84,6 +86,8 @@ class Rumah123:
             response = requests.get(url)
         except TooManyRedirects:
             return False
+        except:
+            return False
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
@@ -97,6 +101,8 @@ class Rumah123:
         articles['url'] = url
 
         article = soup.find('div', class_="post-wrapper")
+        if not article:
+            return False
 
         #extract date
         pubdate = article.find('meta', {'itemprop':'datePublished'})

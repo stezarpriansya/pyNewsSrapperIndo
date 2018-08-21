@@ -69,10 +69,13 @@ class Okezone:
         soup = BeautifulSoup(html, "html5lib")
 
         #extract scrip json ld
-        scripts = soup.findAll('script', attrs={'type':'application/ld+json'})
-        if scripts:
-            scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts[-1].get_text(strip=True)))
+        scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
+        if scripts_all:
+            scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[-1].get_text(strip=True)))
             scripts = json.loads(scripts)
+            if scripts['datePublished'] == '':
+                scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[0].get_text(strip=True)))
+                scripts = json.loads(scripts)
         else:
             return False
 
@@ -92,7 +95,7 @@ class Okezone:
         articles['url'] = url
 
         article = soup.find('div', class_="container-bodyhome-left")
-
+        # print(scripts)
         #extract date
         pubdate = scripts['datePublished']
         pubdate = pubdate.strip(' \t\n\r')
@@ -102,9 +105,9 @@ class Okezone:
         try:
             articles['id'] = int(id)
         except ValueError as verr:
-            articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M:%S").timestamp()) + len(url)
+            articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S").timestamp()) + len(url)
         except Exception as ex:
-            articles['id'] = int(datetime.strptime(pubdate, "%d-%b-%Y %H:%M:%S").timestamp()) + len(url)
+            articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S").timestamp()) + len(url)
 
         #extract author
         articles['author'] = scripts['author']['name']

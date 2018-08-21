@@ -48,6 +48,9 @@ class Antara:
         indeks = contentDiv.findAll('article')
         for post in indeks:
             link = [post.find('a', href=True)['href'], ""]
+            if post.find('p', class_="slug"):
+                if ('video' in post.find('p', class_="slug").get_text(strip=True).lower()) or ('foto' in post.find('p', class_="slug").get_text(strip=True).lower()):
+                    continue
             detail = self.getDetailBerita(link)
             if detail:
                 if self.insertDB(detail):
@@ -95,6 +98,8 @@ class Antara:
         articles['url'] = url
 
         article = soup.find('article', class_="post-wrapper clearfix")
+        if not article:
+            return False
 
         #extract date
         pubdate = scripts['datePublished']

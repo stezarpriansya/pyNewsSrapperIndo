@@ -40,23 +40,25 @@ class Rumahhokie:
         indeks = soup.findAll('div', class_="td_module_16 td_module_wrap td-animation-stack")
         flag = True
         for post in indeks:
+            if not post.find('a', class_="td-post-category"):
+                continue
             link = [post.find('h3', class_="entry-title td-module-title").find('a', href=True)['href'], post.find('a', class_="td-post-category").get_text(strip=True)]
             #check if there are a post with same url
-            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            # cursor = con.cursor()
-            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            # cursor.execute(query)
-            # result = cursor.fetchone()
-            # cursor.close()
-            # con.close()
-            # if(result[0] > 0):
-            #     flag = False
-            #     break
-            # else:
-            detail = self.getDetailBerita(link)
-            if detail:
-                if self.insertDB(detail):
-                    details.append(detail)
+            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            cursor = con.cursor()
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            cursor.close()
+            con.close()
+            if(result[0] > 0):
+                flag = False
+                break
+            else:
+                detail = self.getDetailBerita(link)
+                if detail:
+                    if self.insertDB(detail):
+                        details.append(detail)
 
         if flag:
             el_page = soup.find('div', class_="page-nav td-pb-padding-side")

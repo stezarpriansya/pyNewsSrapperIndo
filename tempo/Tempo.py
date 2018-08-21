@@ -64,7 +64,15 @@ class Tempo:
         #link
         url = link[0]
         print(url)
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+        except ConnectionError:
+            print("Connection Error, but it's still trying...")
+            time.sleep(10)
+            self.getDetailBerita(link)
+        except:
+            return False
+            
         html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html2, "html5lib")
@@ -73,7 +81,8 @@ class Tempo:
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
         if scripts_all:
             scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[0].get_text(strip=True)))
-            scripts = re.sub(r'\"articleBody\".+', '', scripts)
+            scripts = re.sub(r"(\s*\"articleBody\" *: *\".*\"(,|(?=\s+\})))(?=\s*\"datePublished\" *: *\".*\"(,|(?=\s+\})))","\n",scripts)
+            # print(scripts)
             scripts = json.loads(html.unescape(scripts))
             scripts2 = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[1].get_text(strip=True)))
             scripts2 = json.loads(html.unescape(scripts2))
@@ -86,7 +95,8 @@ class Tempo:
         articles['url'] = url
 
         article = soup.find('article', {'itemtype':"http://schema.org/NewsArticle"})
-
+        if not article:
+            return False
         #extract date
         pubdate = scripts['datePublished']
         pubdate = pubdate[0:19].strip(' \t\n\r')

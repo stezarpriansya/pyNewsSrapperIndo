@@ -39,6 +39,7 @@ class Otorider:
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('div', class_="col-lg-12")
         # flag = True
+        max_page = -1
         for post in indeks:
             link = [post.find('a', href=True)['href'], cat]
             #check if there are a post with same url
@@ -52,13 +53,13 @@ class Otorider:
             # comment sementara
             if (result[0] > 0):
                 max_page = page
+                # flag = True
                 break
             else:
                 detail = self.getDetailBerita(link)
                 if detail :
                     if self.insertDB(detail):
                         details.append(detail)
-            max_page = -1
                 # max_page = 3
 
         if page != max_page:
