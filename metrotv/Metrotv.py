@@ -52,14 +52,14 @@ class Metrotv:
                 if self.insertDB(detail):
                     details.append(detail)
 
-            el_page = soup.find('div', class_="grid")
-            if el_page:
-                a_page = el_page.findAll('div', class_='bu fr')[-1].find('a')
-                max_page = int(a_page['data-ci-pagination-page'].replace('\n', '').strip(' '))
+        el_page = soup.find('div', class_="grid")
+        if el_page:
+            a_page = el_page.findAll('div', class_='bu fr')[-1].find('a')
+            max_page = int(a_page['data-ci-pagination-page'].replace('\n', '').strip(' '))
 
-                if page < max_page:
-                    time.sleep(5)
-                    details = self.getAllBerita(details, page+1, offset+30, cat_link, category, date)
+            if page < max_page:
+                time.sleep(5)
+                details = self.getAllBerita(details, page+1, offset+30, cat_link, category, date)
         return 'berhasil ambil semua berita'
 
     def getDetailBerita(self, link):
