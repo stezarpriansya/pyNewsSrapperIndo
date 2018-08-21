@@ -22,7 +22,6 @@ class Sindonews:
 
         print("page ", page)
         url = "https://index.sindonews.com/index/"+ str(cat_link)+ "/" + str(offset)+ "?t="+ date
-        print(url)
 
         # Make the request and create the response object: response
         try:
