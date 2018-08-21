@@ -40,27 +40,27 @@ class Propertiterkini:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         contentDiv = soup.find('div', class_="post-listing archive-box")
-        flag = True
+        # flag = True
         if contentDiv:
             for post in contentDiv.findAll('h2'):
                 link = [post.find('a', href=True)['href'], category]
                 # check if there are a post with same url
-                con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-                cursor = con.cursor()
-                query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-                cursor.execute(query)
-                result = cursor.fetchone()
-                cursor.close()
-                con.close()
-                if(result[0] > 0):
-                    flag = False
-                    break
-                else:
-                    detail = self.getDetailBerita(link)
-                    if detail:
-                        if self.insertDB(detail):
-                            details.append(detail)
-        if flag:
+                # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+                # cursor = con.cursor()
+                # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+                # cursor.execute(query)
+                # result = cursor.fetchone()
+                # cursor.close()
+                # con.close()
+                # if(result[0] > 0):
+                #     flag = False
+                #     break
+                # else:
+                detail = self.getDetailBerita(link)
+                if detail:
+                    if self.insertDB(detail):
+                        details.append(detail)
+        # if flag:
             el_page = soup.find('div', class_='pagination')
             if el_page:
                 max_page = int(el_page.find('span', class_='pages').text.split(' ')[-1])
@@ -112,7 +112,7 @@ class Propertiterkini:
         pubdate = pubdate.strip(' \t\n\r')
         pubdate = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S+07:00"), "%Y-%m-%d %H:%M:%S")
         articles['pubdate'] = pubdate
-        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S").timestamp()) + len(url)
+        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S+07:00").timestamp()) + len(url)
 
         #extract author
         author = soup.find('span', class_='post-meta-author')

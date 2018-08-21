@@ -90,11 +90,11 @@ class Tirto:
         articles['url'] = url
 
         # infografik
-        infografik = soup.find('div', class_='col-12 photograph-caption-holder mt-2').find('h6')
-        if infografik:
-            infografik1 = infografik.get_text(strip=True) if infografik else ''
-            if "infografik" in infografik1.lower():
-                return False
+        # infografik = soup.find('div', class_='col-12 photograph-caption-holder mt-2').find('h6')
+        # if infografik:
+        #     infografik1 = infografik.get_text(strip=True) if infografik else ''
+        #     if "infografik" in infografik1.lower():
+        #         return False
 
         #article
         # intro = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[0]
@@ -102,11 +102,10 @@ class Tirto:
         # author = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[2]
 
         #extract date
-        author_pubdate = soup.find('span', class_='detail-date mt-1 text-left').get_text(strip=True).replace('Oleh: ','')
-        author_pubdate = author_pubdate.split('- ')
-        pubdate = author_pubdate[-1]
-        pubdate = pubdate.strip(' ')
-        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d %B %Y"), "%Y-%m-%d %H:%M:%S")
+        author_pubdate = soup.find('span', class_='detail-date mt-1 text-left')
+        author_pubdate = author_pubdate.get_text(strip=True).replace('Oleh: ','').split('- ') if author_pubdate else ''
+        pubdate = author_pubdate[-1].strip(' ') if author_pubdate else ''
+        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d %B %Y"), "%Y-%m-%d %H:%M:%S") if pubdate else ''
 
         articles['id'] = int(datetime.strptime(pubdate, "%d %B %Y").timestamp()) + len(url)
         #extract author
