@@ -24,7 +24,7 @@ class Tirto:
 
         print("page ", page)
         url = "https://tirto.id/indeks/"+str(page)+"?date="+date
-
+        print(url)
         # Make the request and create the response object: response
         try:
             response = requests.get(url)

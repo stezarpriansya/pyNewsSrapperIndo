@@ -22,7 +22,7 @@ class Rumahku:
 
         print("page ", page)
         url = "http://www.rumahku.com/artikel/berita/page:"+str(page)+"/"
-
+        print(url)
         # Make the request and create the response object: response
         try:
             response = requests.get(url)
