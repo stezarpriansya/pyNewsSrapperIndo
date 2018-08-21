@@ -90,6 +90,8 @@ class Sindonews:
 
         #article
         article = soup.find("div", id="content")
+        if not article:
+            return False
 
         #extract date
         pubdate = soup.find('time').get_text(strip=True)
@@ -123,7 +125,7 @@ class Sindonews:
 
         #hapus link sisip image
         for link in article.findAll('img'):
-            link.decompose()
+            link.decompose() if link else ''
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")

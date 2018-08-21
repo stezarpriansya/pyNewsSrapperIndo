@@ -44,9 +44,9 @@ class Metrotv:
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
-        contentDiv = soup.find('div', class_="style_06").find('ul')
+        contentDiv = soup.find('div', class_="style_06")
         for post in contentDiv.findAll('li'):
-            link = [post.find('a',href=True)['href']]
+            link = [post.find('h2').find('a',href=True)['href']]
             detail = self.getDetailBerita(link)
             if detail:
                 if self.insertDB(detail):

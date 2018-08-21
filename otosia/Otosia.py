@@ -104,10 +104,12 @@ class Otosia:
 
         #article
         article = soup.find('div', class_="OtoDetailNews")
+        if not article:
+             return False
 
         #extract date
-        pubdate = soup.find('span', class_="newsdetail-schedule").get_text(strip=True)
-        pubdate = pubdate.strip(' \t\n\r')
+        pubdate = soup.find('span', class_="newsdetail-schedule")
+        pubdate = pubdate.get_text(strip=True).strip(' \t\n\r') if pubdate else ''
         pubdate = pubdate.replace("'", "")
         articles['pubdate']=datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
         articles['pubdate']

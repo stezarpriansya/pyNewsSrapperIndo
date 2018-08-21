@@ -44,7 +44,7 @@ class Propertiterkini:
         if contentDiv:
             for post in contentDiv.findAll('h2'):
                 link = [post.find('a', href=True)['href'], category]
-                #check if there are a post with same url
+                # check if there are a post with same url
                 # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
                 # cursor = con.cursor()
                 # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
@@ -112,7 +112,7 @@ class Propertiterkini:
         pubdate = pubdate.strip(' \t\n\r')
         pubdate = datetime.strftime(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S+07:00"), "%Y-%m-%d %H:%M:%S")
         articles['pubdate'] = pubdate
-        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%d %H:%M:%S").timestamp()) + len(url)
+        articles['id'] = int(datetime.strptime(pubdate, "%Y-%m-%dT%H:%M:%S+07:00").timestamp()) + len(url)
 
         #extract author
         author = soup.find('span', class_='post-meta-author')
@@ -125,8 +125,9 @@ class Propertiterkini:
         articles['comments'] = 0
 
         #extract tags
-        tags = soup.find('p', class_='post-tag').findAll('a')
-        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags]) if tags else ''
+        tags = soup.find('p', class_='post-tag')
+        articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
+
 
         #extract images
         images = soup.find('div', class_='single-post-thumb').find('img')
