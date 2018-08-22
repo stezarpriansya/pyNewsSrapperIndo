@@ -138,8 +138,8 @@ class Otosia:
         articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
-        image = soup.find('img', class_="lazy_loaded")['data-src']
-        articles['images'] = image
+        images = soup.find('img', class_="lazy_loaded")['data-src']
+        articles['images'] = images
 
         #hapus link sisip
         for div in article.findAll('div'):

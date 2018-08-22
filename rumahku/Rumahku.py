@@ -23,7 +23,6 @@ class Rumahku:
         print("page ", page)
         url = "http://www.rumahku.com/artikel/berita/page:"+str(page)+"/"
         print(url)
-
         # Make the request and create the response object: response
         try:
             response = requests.get(url)
@@ -77,7 +76,6 @@ class Rumahku:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
 
-
         #extract title
         title = soup.find('h4', class_='margin-bottom-2')
         articles['title'] = title.text if title else ''
@@ -88,14 +86,14 @@ class Rumahku:
         # if ("foto" in title.lower()) or  "video" in title.lower():
         #     return False
 
-        bc = soup.find('div', {'id':'breadscrumb'})
+        bc = soup.find('div', {'class':'container'}).find('ul')
         if not bc:
             return False
-        sub = bc.findAll('li')[-2].text if bc else ''
+        sub = bc.findAll('li')[-2] if bc else ''
 
         #category
         articles['category'] = 'properti'
-        articles['subcategory'] = sub
+        articles['subcategory'] = sub.text
 
         #article_url
         articles['url'] = url
@@ -105,11 +103,10 @@ class Rumahku:
         articles['id'] = int(article_id)
 
         #article
-        article = soup.find('div', class_='text-article')
-        text = article.find('div', class_='text')
+        article = soup.find('div', class_='text-article').find('div', class_='text')
 
         #extract date
-        pubdate = soup.findAll('span', class_='date small-text')[1].text
+        pubdate = soup.findAll('span', class_='date small-text')[-2].text
         pubdate = pubdate.replace('WIB','')
         pubdate = pubdate.replace('Agu','Agt')
         pubdate = pubdate.strip(' \t\n\r')
@@ -118,8 +115,8 @@ class Rumahku:
         # articles['id'] = int(datetime.strptime(pubdate, "%d %b %Y, %H:%M").timestamp()) + len(url)
 
         #extract author
-        author = soup.find('div', class_='title-article margin-bottom-4')
-        articles['author'] = author.find('label', class_='normal t-purple') if author else ''
+        author = soup.find('div', class_='title-article margin-bottom-4').find('label', class_='normal t-purple')
+        articles['author'] = author.text if author else ''
 
         #source
         articles['source'] = 'rumahku'
@@ -130,28 +127,24 @@ class Rumahku:
         #extract tags
         # tags = soup.find('p', class_='post-tag').findAll('a')
         # articles['tags'] = ','.join([x.get_text(strip=True) for x in tags]) if tags else ''
-        articles['tags'] = '-'
+        articles['tags'] = ''
 
         #extract images
         images = soup.find('meta', {'property':'og:image'})
         articles['images'] = images['content'] if images else ''
 
         #hapus link sisip
-        for div in text.findAll('div'):
+        for div in article.findAll('div'):
             div.decompose()
 
-        for ket in text.findAll('p')[-6:]:
+        for ket in article.findAll('p')[-6:]:
             ket.decompose()
 
-        # for com in article.findAll('p'):
-        #     if "propertiterkini.com" in com.text.lower():
-        #         baca.decompose()
-
         #extract content
-        detail = BeautifulSoup(text.decode_contents().replace('<br/>', ' '), "html5lib")
+        detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
         articles['content'] = content
-        #print('memasukkan berita id ', articles['id'])
+        print('memasukkan berita id ', articles['id'])
 
         return articles
 

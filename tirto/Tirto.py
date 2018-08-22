@@ -25,7 +25,6 @@ class Tirto:
         print("page ", page)
         url = "https://tirto.id/indeks/"+str(page)+"?date="+date
         print(url)
-
         # Make the request and create the response object: response
         try:
             response = requests.get(url)
@@ -95,6 +94,11 @@ class Tirto:
         #     infografik1 = infografik.get_text(strip=True) if infografik else ''
         #     if "infografik" in infografik1.lower():
         #         return False
+        #extract tags
+        tags = soup.find('meta', attrs={"name":"keywords"})['content']
+        articles['tags'] = tags
+        if ("infografik tunggal" in tags.lower()) or "video" in tags.lower():
+            return False
 
         #article
         # intro = soup.find('article', class_="col-12 content-detail-holder my-4").findAll('div', class_="content-text-editor")[0]
@@ -127,10 +131,6 @@ class Tirto:
 
         #extract comments count
         articles['comments'] = 0
-
-        #extract tags
-        tags = soup.find('meta', attrs={"name":"keywords"})['content']
-        articles['tags'] = tags
 
         #extract images
         image = soup.findAll('meta', attrs={"name":"thumbnail"})
