@@ -97,7 +97,7 @@ class Tirto:
         #extract tags
         tags = soup.find('meta', attrs={"name":"keywords"})['content']
         articles['tags'] = tags
-        if "infografik tunggal" in tags.lower():
+        if ("infografik tunggal" in tags.lower()) or "video" in tags.lower():
             return False
 
         #article
