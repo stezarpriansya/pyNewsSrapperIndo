@@ -31,20 +31,20 @@ class Tribun:
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')  # Last I checked this was necessary.
         options.add_argument('--disable-extensions')
+        options.add_argument("--incognito");
 
         driver = webdriver.Chrome("../chromedriver.exe", chrome_options=options)
         html = ''
         try:
             driver.get(url)
-            # Extract HTML texts contained in Response object: html
-            html = driver.page_source
-            driver.quit()
         except ConnectionError:
             driver.quit()
             print("Connection Error, but it's still trying...")
             time.sleep(10)
             details = self.getAllBerita(details, page, date)
-
+        # Extract HTML texts contained in Response object: html
+        html = driver.page_source
+        driver.quit()
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         indeks = soup.findAll('li', class_="ptb15")
@@ -97,20 +97,21 @@ class Tribun:
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')  # Last I checked this was necessary.
         options.add_argument('--disable-extensions')
+        options.add_argument("--incognito");
 
         driver = webdriver.Chrome("../chromedriver.exe", chrome_options=options)
         html = ''
         try:
             driver.get(url)
             # Extract HTML texts contained in Response object: html
-            html = driver.page_source
-            driver.quit()
         except ConnectionError:
             driver.quit()
             print("Connection Error, but it's still trying...")
             time.sleep(10)
             details = self.getDetailBerita(link)
 
+        html = driver.page_source
+        driver.quit()
 
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
@@ -125,7 +126,10 @@ class Tribun:
         categories = soup.findAll('meta', {'name':'cXenseParse:category'})
 
         articles['category'] = categories[0]['content'] if categories else 'Berita'
-        articles['subcategory'] = categories[1]['content'] if categories else ''
+        if len(categories) > 1:
+            articles['subcategory'] = categories[1]['content'] if categories else ''
+        else:
+            articles['subcategory'] = ''
 
         articles['url'] = url
 

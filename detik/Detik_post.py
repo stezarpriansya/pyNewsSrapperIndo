@@ -12,27 +12,26 @@ from requests.exceptions import ConnectionError
 import unicodedata
 import mysql.connector
 
-class Detik:
-    def getAllBerita(self, details, page, cat_link, category, date=datetime.strftime(datetime.today(), '%m/%d/%Y')):
+class Detik_post:
+    def getAllBerita(self, details, cat_link, category, date=datetime.strftime(datetime.today(), '%m/%d/%Y')):
         """
         Untuk mengambil seluruh url
         link pada indeks category tertentu
         date format : dd/mm/YYYY
         """
 
-        print("page ", page)
-        if cat_link == 'news':
-            url = "https://"+cat_link+".detik.com/indeks/all/"+str(page)+"?date="+date
-        else :
-            url = "https://"+cat_link+".detik.com/indeks/"+str(page)+"?date="+date
-        print(url)
+        # print("page ", page)
+        # s = requests.Session()
+        url = "https://"+cat_link+".detik.com/indeks/"
+        formdata = {}
+        formdata['datepick'] = date
         # Make the request and create the response object: response
         try:
-            response = requests.get(url)
+            response = requests.post(url, data=formdata)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
             time.sleep(10)
-            details = self.getAllBerita(details, page, cat_link, category, date)
+            details = self.getAllBerita(details, cat_link, category, date)
         # Extract HTML texts contained in Response object: html
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
@@ -61,7 +60,7 @@ class Detik:
 
             if page < max_page:
                 time.sleep(10)
-                details = self.getAllBerita(details, page+1, cat_link, category, date)
+                details = self.getAllBerita(details, cat_link, category, date)
 
         return 'berhasil ambil semua berita'
 

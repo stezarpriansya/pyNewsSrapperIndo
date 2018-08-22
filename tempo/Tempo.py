@@ -72,7 +72,7 @@ class Tempo:
             self.getDetailBerita(link)
         except:
             return False
-            
+
         html2 = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html2, "html5lib")
@@ -80,10 +80,13 @@ class Tempo:
         #extract scrip json ld
         scripts_all = soup.findAll('script', attrs={'type':'application/ld+json'})
         if scripts_all:
-            scripts = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[0].get_text(strip=True)))
-            scripts = re.sub(r"(\s*\"articleBody\" *: *\".*\"(,|(?=\s+\})))(?=\s*\"datePublished\" *: *\".*\"(,|(?=\s+\})))","\n",scripts)
+            scripts1 = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[0].get_text(strip=True)))
+            scripts_akhir = re.sub(r"(\s*\"articleBody\" *: *\".*\"(,|(?=\s+\})))(?=\s*\"datePublished\" *: *\".*\"(,|(?=\s+\})))","\n",scripts1)
             # print(scripts)
-            scripts = json.loads(html.unescape(scripts))
+            try:
+                scripts = json.loads(html.unescape(scripts_akhir))
+            except:
+                return False
             scripts2 = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",scripts_all[1].get_text(strip=True)))
             scripts2 = json.loads(html.unescape(scripts2))
         else:

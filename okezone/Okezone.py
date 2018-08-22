@@ -63,7 +63,14 @@ class Okezone:
         articles = {}
         #link
         url = link[0]
-        response = requests.get(url)
+        try:
+            response = requests.get(url)
+        except ConnectionError:
+            print("Connection Error, but it's still trying...")
+            time.sleep(10)
+            self.getDetailBerita(link)
+        except:
+            return False
         html = response.text
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")

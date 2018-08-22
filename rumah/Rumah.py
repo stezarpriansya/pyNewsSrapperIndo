@@ -27,7 +27,9 @@ class Rumah:
         url = "https://www.rumah.com/berita-properti/category/"+cat+"?page="+str(page)
         print(url)
         # Make the request and create the response object: response
-        options = Options()
+        options = webdriver.ChromeOptions()
+        options.add_argument(
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36')
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')  # Last I checked this was necessary.
         options.add_argument('--disable-extensions')
@@ -36,18 +38,19 @@ class Rumah:
         html = ''
         try:
             driver.get(url)
-            # Extract HTML texts contained in Response object: html
-            html = driver.page_source
-            driver.quit()
         except ConnectionError:
             driver.quit()
             print("Connection Error, but it's still trying...")
             time.sleep(10)
             details = self.getAllBerita(details, page, cat, date)
+        # Extract HTML texts contained in Response object: html
+        html = driver.page_source
+        driver.quit()
+
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         contentDiv = soup.find('div', {"class":"box-news-article"})
-        print(soup)
+        # print(soup)
         indeks = soup.findAll('div', {'class':'box news-article-lists'})
         flag = True
         for post in indeks:
@@ -88,8 +91,25 @@ class Rumah:
         articles = {}
         #link
         url = link[0]
-        response = requests.get(url)
-        html = response.text
+        options = webdriver.ChromeOptions()
+        options.add_argument(
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36')
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')  # Last I checked this was necessary.
+        options.add_argument('--disable-extensions')
+
+        driver = webdriver.Chrome("../chromedriver.exe", chrome_options=options)
+        html = ''
+        try:
+            driver.get(url)
+        except ConnectionError:
+            driver.quit()
+            print("Connection Error, but it's still trying...")
+            time.sleep(10)
+            details = self.getAllBerita(details, page, cat, date)
+        # Extract HTML texts contained in Response object: html
+        html = driver.page_source
+        driver.quit()
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         #extract title
