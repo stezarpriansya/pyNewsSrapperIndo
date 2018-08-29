@@ -81,6 +81,13 @@ class Tirto:
         if ("foto" in cat.lower()) or  ("video" in cat.lower()) or "infografik tunggal" in cat.lower():
             return False
 
+        cap = soup.find('div', class_='col-12 photograph-caption-holder mt-2')
+        if cap:
+            if "infografik"  in cap.get_text(strip=True).lower():
+                return False
+        else:
+            ''
+
         #category
         articles['category'] = cat
         articles['subcategory'] = ""

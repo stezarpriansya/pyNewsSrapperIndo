@@ -137,8 +137,13 @@ class Rumahku:
         for div in article.findAll('div'):
             div.decompose()
 
-        for ket in article.findAll('p')[-6:]:
-            ket.decompose()
+        if "untuk keperluan info bisa kunjungi website" in article.text.lower():
+            for ket in article.findAll('p')[-7:]:
+                ket.decompose()
+
+        if "baca juga" in article.text.lower():
+            for baca in article.findAll('span', attrs = {'style':'font-size:20px;'}):
+                baca.decompose()
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")

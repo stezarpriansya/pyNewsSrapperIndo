@@ -103,12 +103,15 @@ class Otosia:
         articles['url'] = url
 
         #article
+        tab = soup.find('div', attrs={'id':'mobart-detail'})
         article = soup.find('div', class_="OtoDetailNews")
         if not article:
              return False
 
         #extract date
         pubdate = soup.find('span', class_="newsdetail-schedule")
+        if not pubdate:
+            return False
         pubdate = pubdate.get_text(strip=True).strip(' \t\n\r') if pubdate else ''
         pubdate = pubdate.replace("'", "")
         articles['pubdate']=datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
@@ -138,7 +141,7 @@ class Otosia:
         articles['tags'] = ','.join([x.get_text(strip=True) for x in tags.findAll('a')]) if tags else ''
 
         #extract images
-        images = soup.find('img', class_="lazy_loaded")['data-src']
+        images = tab.find('img', class_="lazy_loaded")['data-src']
         articles['images'] = images
 
         #hapus link sisip
