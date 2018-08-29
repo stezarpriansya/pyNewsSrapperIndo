@@ -153,6 +153,14 @@ class Rajamobil:
                 if 'baca' in ls.find('em').get_text(strip=True).lower():
                     ls.decompose()
 
+        if detail.get_text(strip=True) == '':
+            article = soup.find('div', class_="td-pb-span8 td-main-content")
+            detail = article.find('div', attrs={"class":"td-post-content"})
+            for div in detail.findAll('div', class_="post-views"):
+                div.decompose()
+
+            for div in detail.findAll('div', class_="essb_links"):
+                div.decompose()
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
