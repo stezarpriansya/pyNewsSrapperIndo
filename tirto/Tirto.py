@@ -114,8 +114,13 @@ class Tirto:
 
         #extract date
         author_pubdate = soup.find('span', class_='detail-date mt-1 text-left')
-        author_pubdate = author_pubdate.get_text(strip=True).replace('Oleh: ','').split('- ') if author_pubdate else ''
-        pubdate = author_pubdate[-1].strip(' ') if author_pubdate else ''
+        if author_pubdate:
+            author_pubdate = author_pubdate.get_text(strip=True).replace('Oleh: ','').split('- ')
+            pubdate = author_pubdate[-1].strip(' ')
+        else:
+            pubdate = soup.find('span', class_='detail-date mt-1')
+            pubdate = pubdate.get_text(strip=True)
+
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%d %B %Y"), "%Y-%m-%d %H:%M:%S") if pubdate else ''
 
         articles['id'] = int(datetime.strptime(pubdate, "%d %B %Y").timestamp()) + len(url)
@@ -124,7 +129,8 @@ class Tirto:
         # reporter_sumber = credit[0].get_text(strip=True).replace('Reporter: ','')
         # author = credit[1].get_text(strip=True).replace('Penulis: ','')
         # editor = credit[2].get_text(strip=True).replace('Editor: ','')
-        author = author_pubdate[0].strip(' ')
+
+        author = author_pubdate[0].strip(' ') if author_pubdate else ''
         articles['author'] = author
 
         #extract title

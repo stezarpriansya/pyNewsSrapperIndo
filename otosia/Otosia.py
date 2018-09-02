@@ -110,12 +110,9 @@ class Otosia:
 
         #extract date
         pubdate = soup.find('span', class_="newsdetail-schedule")
-        if not pubdate:
-            return False
-        pubdate = pubdate.get_text(strip=True).strip(' \t\n\r') if pubdate else ''
-        pubdate = pubdate.replace("'", "")
-        articles['pubdate']=datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
-        articles['pubdate']
+        pubdate = pubdate.get_text(strip=True) if pubdate else 'Minggu, 1 Januari 1970 00:00'            
+        pubdate = pubdate.strip(' \t\n\r').replace("'", "")
+        articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
 
         #articleid
         articles['id'] = int(datetime.strptime(pubdate, "%A, %d %B %Y %H:%M").timestamp()) + len(url)

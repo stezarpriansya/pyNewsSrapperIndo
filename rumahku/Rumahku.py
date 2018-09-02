@@ -35,32 +35,32 @@ class Rumahku:
         # Create a BeautifulSoup object from the HTML: soup
         soup = BeautifulSoup(html, "html5lib")
         contentDiv = soup.find('div', {'id':'advice-category-list', 'class':'for-article news'})
-        # flag = True
+        flag = True
         for post in contentDiv.findAll('div', class_='text content-right-news big'):
             link = ["http://www.rumahku.com"+post.find('a', href=True)['href'], '']
             # check if there are a post with same url
-            # con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
-            # cursor = con.cursor()
-            # query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
-            # cursor.execute(query)
-            # result = cursor.fetchone()
-            # cursor.close()
-            # con.close()
-            # if(result[0] > 0):
-            #     flag = False
-            #     break
-            # else:
-            detail = self.getDetailBerita(link)
-            if detail:
-                if self.insertDB(detail):
-                    details.append(detail)
-        # if flag:
-        el_page = soup.find('div', class_='pagination')
-        if el_page:
-            next_page = el_page.findAll('li', class_='next')
-            if next_page:
-                time.sleep(5)
-                details = self.getAllBerita(details, page+1)
+            con = mysql.connector.connect(user='root', password='', host='127.0.0.1', database='news_db')
+            cursor = con.cursor()
+            query = "SELECT count(*) FROM article WHERE url like '"+link[0]+"'"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            cursor.close()
+            con.close()
+            if(result[0] > 0):
+                flag = False
+                break
+            else:
+                detail = self.getDetailBerita(link)
+                if detail:
+                    if self.insertDB(detail):
+                        details.append(detail)
+        if flag:
+            el_page = soup.find('div', class_='pagination')
+            if el_page:
+                next_page = el_page.findAll('li', class_='next')
+                if next_page:
+                    time.sleep(5)
+                    details = self.getAllBerita(details, page+1)
 
         return 'berhasil ambil semua berita'
 
