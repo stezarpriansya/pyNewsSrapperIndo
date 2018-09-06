@@ -134,8 +134,8 @@ class Rumahku:
         articles['images'] = images['content'] if images else ''
 
         #hapus link sisip
-        for div in article.findAll('div'):
-            div.decompose()
+        # for div in article.findAll('div'):
+        #     div.decompose()
 
         if "untuk keperluan info bisa kunjungi website" in article.text.lower():
             for ket in article.findAll('p')[-7:]:

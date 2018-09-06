@@ -30,7 +30,7 @@ class Tirto:
             response = requests.get(url)
         except ConnectionError:
             print("Connection Error, but it's still trying...")
-            time.sleep(10)
+            time.sleep(15)
             details = self.getAllBerita(details, page, date)
         # Extract HTML texts contained in Response object: html
         html = response.text

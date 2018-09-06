@@ -140,6 +140,9 @@ class Metrotv:
         for script in detail.findAll('script'):
             script.decompose()
 
+        for tabel in detail.findAll('table'):
+            tabel.decompose()
+            
         #extract content
         detail = BeautifulSoup(detail.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))

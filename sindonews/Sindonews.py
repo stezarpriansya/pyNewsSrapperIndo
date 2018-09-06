@@ -123,6 +123,15 @@ class Sindonews:
         image = soup.find('div', class_="article").find('img')
         articles['images'] = image['src'] if image else ''
 
+        # hapus link baca juga
+        for baca in article.findAll('strong'):
+            if "baca juga" in baca.get_text(strip=True).lower():
+                baca.decompose()
+
+        # hapus script comments
+        for script in article.findAll('script'):
+            script.decompose()
+
         #hapus link sisip image
         for link in article.findAll('img'):
             link.decompose() if link else ''

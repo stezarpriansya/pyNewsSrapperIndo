@@ -134,8 +134,12 @@ class Propertiterkini:
         articles['images'] = images['src'] if images else ''
 
         #hapus link sisip
-        for div in article.findAll('div'):
-            div.decompose()
+        for share in article.findAll('div', class_='share-post'):
+            if "share" in share.get_text(strip=True).lower():
+                share.decompose()
+
+        for image in article.findAll('td'):
+            image.decompose()
 
         for related in article.findAll('section', {'id':'related_posts'}):
             related.decompose()
@@ -147,9 +151,25 @@ class Propertiterkini:
             if "baca juga:" in baca.text.lower():
                 baca.decompose()
 
+        # for baca2 in article.findAll('div', attrs = {'style':'text-align: justify;'}):
+        #     if "baca juga:" in baca2.text.lower():
+        #         baca2[:-1].decompose()
+
         for com in article.findAll('p'):
             if "propertiterkini.com" in com.text.lower():
                 baca.decompose()
+
+        for share in article.findAll('div', class_='sharedaddy sd-sharing-enabled'):
+            share.decompose()
+
+        for like in article.findAll('h3',class_='sd-title'):
+            like.decompose()
+
+        for like2 in article.findAll('span',class_='button'):
+            like2.decompose()
+
+        for like3 in article.findAll('div',class_='likes-widget-placeholder post-likes-widget-placeholder'):
+            like3.decompose()
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")

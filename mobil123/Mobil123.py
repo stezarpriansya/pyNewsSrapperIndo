@@ -134,11 +134,24 @@ class Mobil123:
         articles['images'] = image
 
         #hapus link sisip
+        for baca in article.findAll('p'):
+            if "baca juga" in baca.get_text(strip=True).lower():
+                baca.decompose()
+
         for link in article.findAll('div'):
             link.decompose()
 
         for link in article.findAll('small'):
             link.decompose()
+
+        for temu in article.findAll('p'):
+            if "temukan mobil idaman dimobil123" in temu.get_text(strip=True).lower():
+                temu.decompose()
+
+        for mari in article.findAll('p'):
+            if "mari bergabung bersama kami difacebookdantwitter" in mari.get_text(strip=True).lower():
+                mari.decompose()
+
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")

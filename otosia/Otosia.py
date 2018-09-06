@@ -110,7 +110,7 @@ class Otosia:
 
         #extract date
         pubdate = soup.find('span', class_="newsdetail-schedule")
-        pubdate = pubdate.get_text(strip=True) if pubdate else 'Minggu, 1 Januari 1970 00:00'            
+        pubdate = pubdate.get_text(strip=True) if pubdate else 'Minggu, 1 Januari 1970 00:00'
         pubdate = pubdate.strip(' \t\n\r').replace("'", "")
         articles['pubdate'] = datetime.strftime(datetime.strptime(pubdate, "%A, %d %B %Y %H:%M"), "%Y-%m-%d %H:%M:%S")
 
@@ -119,8 +119,7 @@ class Otosia:
 
         #extract editor
         author = soup.findAll('span', class_="newsdetail-schedule")[1].get_text(strip=True)
-        author = author.replace('Editor : ',"")
-        author = author.strip(' ')
+        author = author.split(' | ')[0].replace("Editor : ", "")
         articles['author'] = author
 
         #extract title
@@ -142,11 +141,14 @@ class Otosia:
         articles['images'] = images
 
         #hapus link sisip
-        for div in article.findAll('div'):
+        for div in article.findAll('div', class_='relatedContentBox'):
             div.decompose()
 
         for tabel in article.findAll('table'):
             tabel.decompose()
+
+        for script in article.findAll('script'):
+            script.decompose()
 
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
