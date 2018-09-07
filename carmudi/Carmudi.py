@@ -130,8 +130,10 @@ class Carmudi:
         detail = article.find('div', class_="vw-post-content clearfix")
 
         #hapus div
-        for div in detail.findAll('div'):
-            div.decompose()
+        if detail.findAll('div'):
+            for div in detail.findAll('div'):
+                if div.find('script'):
+                    div.decompose()
 
         #hapus figure sisip
         for figure in detail.findAll('figure'):

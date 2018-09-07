@@ -59,7 +59,7 @@ class Tempo:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(5)
+        time.sleep(2)
         articles = {}
         #link
         url = link[0]
@@ -133,7 +133,8 @@ class Tempo:
         #hapus div
         if detail.findAll('div'):
             for div in detail.findAll('div'):
-                div.decompose()
+                if div.find('script'):
+                    div.decompose()
 
         #hapus link sisip
         if detail.findAll('p'):

@@ -63,7 +63,7 @@ class Antara:
             active_page = el_page.find('li', class_="active").get_text(strip=True).replace('\n', '').strip(' ')
 
             if last_page != active_page:
-                time.sleep(5)
+                time.sleep(2)
                 details = self.getAllBerita(details, int(active_page)+1, date)
         return 'berhasil ambil semua berita'
 
@@ -71,7 +71,7 @@ class Antara:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(5)
+        time.sleep(2)
         articles = {}
         #link
         url = link[0]
@@ -138,8 +138,8 @@ class Antara:
             p.decompose()
 
         #hapus video sisip
-        for div in detail.findAll('div'):
-            div.decompose()
+        # for div in detail.findAll('div'):
+        #     div.decompose()
 
         #hapus video sisip
         for strong in detail.findAll('strong'):

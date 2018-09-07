@@ -127,8 +127,8 @@ class Cintamobil:
         detail = article.find('div', attrs={'class':'w--100 pull-left set-relative detail-font'})
 
         #hapus video sisip
-        for div in detail.findAll('div'):
-            div.decompose()
+        # for div in detail.findAll('div'):
+        #     div.decompose()
 
         #hapus all script
         for script in detail.findAll('script'):

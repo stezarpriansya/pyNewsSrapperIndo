@@ -123,7 +123,8 @@ class Idntimes:
         #hapus div
         if detail.findAll('div'):
             for div in detail.findAll('div'):
-                div.decompose()
+                if div.find('script'):
+                    div.decompose()
 
         #hapus link sisip
         if detail.findAll('strong'):

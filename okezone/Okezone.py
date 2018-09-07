@@ -50,7 +50,7 @@ class Okezone:
             max_page = (int(el_page.findAll('a')[-1]['href'][50:-1])/15)+1
 
             if page < max_page:
-                time.sleep(10)
+                time.sleep(2)
                 details = self.getAllBerita(details, page+1, page*15, date)
 
         return 'berhasil ambil semua berita'
@@ -59,7 +59,7 @@ class Okezone:
         """
         Mengambil seluruh element dari halaman berita
         """
-        time.sleep(10)
+        time.sleep(2)
         articles = {}
         #link
         url = link[0]
@@ -145,9 +145,10 @@ class Okezone:
             link.decompose()
 
         #hapus video sisip
-        for div in detail.findAll('div'):
-            div.decompose()
-
+        if detail.findAll('div'):
+            for div in detail.findAll('div'):
+                if div.find('script'):
+                    div.decompose()
         #hapus all setelah clear fix
         mb20 = detail.find('div', class_="clearfix mb20")
         if mb20:

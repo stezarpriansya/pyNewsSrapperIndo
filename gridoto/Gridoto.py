@@ -141,8 +141,10 @@ class Gridoto:
         detail = article.find('div', attrs={'class':'read__right'})
 
         #hapus video sisip
-        for div in detail.findAll('div'):
-            div.decompose()
+        if detail.findAll('div'):
+            for div in detail.findAll('div'):
+                if div.find('script'):
+                    div.decompose()
 
         #hapus all script
         for script in detail.findAll('script'):
