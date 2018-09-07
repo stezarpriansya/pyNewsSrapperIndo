@@ -132,13 +132,17 @@ class Liputan6:
         for link in article.findAll('div', class_="baca-juga"):
             link.decompose()
 
-        #hapus video sisip
-        #         for tag in detail.findAll('div', class_="detail_tag"):
-        #             tag.decompose()
+        for vid in article.findAll('p'):
+            if "saksikan video di bawah" in vid.get_text(strip=True).lower():
+                vid.decompose()
 
-        #hapus all setelah clear fix
-        #for det in detail.find('div', class_="wfull fl rl"):
-        #     det.decompose()
+        for vid2 in article.findAll('p'):
+            if "saksikan video pilihan di bawah" in vid2.get_text(strip=True).lower():
+                vid2.decompose()
+
+        for vid3 in article.findAll('p'):
+            if "saksikan cuplikan pertandingan dari liga inggris" in vid3.get_text(strip=True).lower():
+                vid3.decompose()
 
         #hapus all script
         #for script in article.findAll('script'):

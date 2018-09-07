@@ -134,6 +134,11 @@ class Kompas:
         for script in article.findAll('script'):
             script.decompose()
 
+        for baca in article.findAll('p'):
+            if baca.find('strong'):
+                if 'baca juga:' in baca.find('strong').get_text(strip=True).lower():
+                    baca.decompose()
+
         #extract content
         detail = BeautifulSoup(article.decode_contents().replace('<br/>', ' '), "html5lib")
         content = re.sub(r'\n|\t|\b|\r','',unicodedata.normalize("NFKD",detail.get_text(strip=True)))
